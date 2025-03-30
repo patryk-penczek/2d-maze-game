@@ -30,7 +30,7 @@
    ```bash
    git clone
    ```
-4. Zaisntaluj projekt:
+4. Zainstaluj projekt:
    ```bash
    mpm install
    ```
