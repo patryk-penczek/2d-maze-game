@@ -80,10 +80,4 @@ Celem gry jest dotarcie do wyjścia z labiryntu jako pierwszy gracz. Gracze musz
 
 Gra jest dostępna na licencji [MIT License](https://opensource.org/licenses/MIT).
 
-## Zrzuty ekranu
-
-(Poniżej możesz dodać zrzuty ekranu gry, które prezentują wygląd labiryntu lub interfejsu gry)
-
----
-
 Zachęcamy do grania i dzielenia się opiniami!
