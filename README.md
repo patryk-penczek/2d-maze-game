@@ -22,7 +22,6 @@
 1. **Node.js** – Upewnij się, że masz zainstalowaną najnowszą wersję **Node.js**. Jeśli nie masz jej zainstalowanej, możesz pobrać ją ze strony [Node.js](https://nodejs.org/).
 
 2. **npm** – npm (Node Package Manager) jest automatycznie zainstalowane wraz z Node.js. Możesz sprawdzić wersję npm, wpisując w terminalu:
-
    ```bash
    npm -v
    ```
