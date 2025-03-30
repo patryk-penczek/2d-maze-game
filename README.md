@@ -1,4 +1,5 @@
-# 2D Maze Game - README
+# 2D Maze Game
+
 
 ## Opis
 
