@@ -26,7 +26,7 @@
    ```bash
    npm -v
    ```
-3. Sklonuj projekt na swój komputer :
+3. Sklonuj projekt na swój komputer:
    ```bash
    git clone
    ```
