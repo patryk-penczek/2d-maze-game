@@ -34,7 +34,8 @@
    ```bash
    mpm install
    ```
-4. Uruchom grę
+4. Uruchom grę:
+
    ```bash
    npm run dev
    ``` 
