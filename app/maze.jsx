@@ -233,11 +233,13 @@ export const Maze = ({ difficulty }) => {
 
   const handleKeyDown = e => {
     if (!gameStarted) return;
-
+  
     setPlayers(prev =>
       prev.map(player => {
+        if (player.gameOver) return player; // 🚫 Blokada ruchu po zakończeniu
+  
         let { x, y } = player;
-
+  
         if (player.id === "blue") {
           if (e.key === "ArrowUp" && maze[x - 1]?.[y] !== 1) x--;
           if (e.key === "ArrowDown" && maze[x + 1]?.[y] !== 1) x++;
@@ -249,16 +251,18 @@ export const Maze = ({ difficulty }) => {
           if (e.key === "a" && maze[x]?.[y - 1] !== 1) y--;
           if (e.key === "d" && maze[x]?.[y + 1] !== 1) y++;
         }
-
-        if (x === finishX && y === finishY && !player.gameOver) {
-          player.gameOver = true;
-        }
-
-        return { ...player, x, y };
+  
+        const hasFinished = x === finishX && y === finishY;
+  
+        return {
+          ...player,
+          x,
+          y,
+          gameOver: player.gameOver || hasFinished
+        };
       })
     );
   };
-
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
