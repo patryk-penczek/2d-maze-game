@@ -241,24 +241,7 @@ export const Maze = () => {
         )}
       </div>
   )}
-      <div className="absolute top-24 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-4 z-20">
-        {!players[myId]?.isReady && (
-          <button
-            onClick={() => socket.emit("playerReady")}
-            className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded text-white font-semibold"
-          >
-            ✔️ Ready
-          </button>
-        )}
-        {players[myId]?.isOwner && !gameStarted && (
-          <button
-            onClick={() => socket.emit("startGameByOwner")}
-            className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded text-white font-semibold"
-          >
-            🕹 Start Game
-          </button>
-        )}
-      </div>
+
 
       <canvas
         ref={canvasRef}
