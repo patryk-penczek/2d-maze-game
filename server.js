@@ -142,12 +142,13 @@ io.on("connection", (socket) => {
         pos: room.players[socket.id]
       });
     });
-
+    /*
     if (Object.keys(room.players).length >= 3 && !room.gameStarted) {
       room.gameStarted = true;
       const serverStart = Date.now() + 3000;
       io.to(roomId).emit("startGame", { serverStart });
     }
+    */
 
     socket.on("playerFinished", ({ time }) => {
       const room = rooms[socket.roomId];
@@ -182,9 +183,11 @@ io.on("connection", (socket) => {
       }
     }
 
+    /*
     if (Object.keys(room.players).length < 2) {
       room.gameStarted = false;
     }
+    */
 
     socket.leave(roomId);
   }

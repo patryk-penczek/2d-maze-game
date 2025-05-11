@@ -26,6 +26,7 @@ export const Maze = () => {
   const [startTime, setStartTime] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
 
+
   const size = 15;
 
   useEffect(() => {
@@ -220,7 +221,26 @@ export const Maze = () => {
           ? `Start za ${Math.ceil(-elapsedTime)}s`
           : `Czas: ${elapsedTime.toFixed(2)}s`}
       </div>
-
+  {!gameStarted && (
+        <div className="absolute top-24 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-4 z-20">
+        {!players[myId]?.isReady && (
+          <button
+            onClick={() => socket.emit("playerReady")}
+            className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded text-white font-semibold"
+          >
+            ✔️ Ready
+          </button>
+        )}
+        {players[myId]?.isOwner && !gameStarted && (
+          <button
+            onClick={() => socket.emit("startGameByOwner")}
+            className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded text-white font-semibold"
+          >
+            🕹 Start Game
+          </button>
+        )}
+      </div>
+  )}
       <div className="absolute top-24 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-4 z-20">
         {!players[myId]?.isReady && (
           <button
