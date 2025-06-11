@@ -187,7 +187,7 @@ export const Maze = () => {
     const isPath = (x, y) => maze[x]?.[y] === 0;
     const radius = size / 3;
 
-    ctx.fillStyle = 'blue';
+    ctx.fillStyle = '#31572c';
 
     for (let i = 0; i < rows; i++) {
       for (let j = 0; j < cols; j++) {
@@ -282,7 +282,7 @@ export const Maze = () => {
     <div className="relative w-dvw h-dvh text-white overflow-hidden">
       <ReturnButton socket={socket} />
 
-      <div className="absolute top-10 left-1/2 transform -translate-x-1/2 text-2xl z-50">
+      <div className="bg-[#132a13] p-4 rounded-lg shadow-2xl absolute top-10 left-1/2 transform -translate-x-1/2 text-2xl z-50">
         {elapsedTime < 0
           ? `Start za ${Math.ceil(-elapsedTime)}s`
           : `Czas: ${elapsedTime.toFixed(2)}s`}
@@ -326,11 +326,11 @@ export const Maze = () => {
       {shouldShowMaze && (
         <canvas
           ref={canvasRef}
-          className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white z-0"
+          className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white z-0 border-12 border-[#132a13] shadow-xl rounded-md"
         />
       )}
 
-      <div className="absolute right-10 top-20 bg-black bg-opacity-40 p-4 rounded-lg text-sm z-50">
+      <div className="absolute right-4 top-20 bg-white text-black p-4 border-2 border-[#132a13] shadow-xl rounded-md text-sm z-50">
         <h2 className="font-bold mb-2">Gracze</h2>
         <ul className="space-y-1">
           {Object.entries(players)

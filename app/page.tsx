@@ -26,7 +26,7 @@ export default function Home() {
           <title>2D Maze Game</title>
           <link rel="icon" href="/favicon.ico" />
         </Head>
-        <div className="bg-white p-10 rounded-lg max-w-md w-full flex flex-col gap-y-8 z-10">
+        <div className="bg-[#faf9f6] shadow-2xl border-1 border-black p-10 rounded-lg max-w-md w-full flex flex-col gap-y-8 z-10">
           <h1 className="text-5xl font-bold text-center">2D Maze Game</h1>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-y-4">
@@ -36,7 +36,7 @@ export default function Home() {
                 placeholder="Your name"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-black"
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-black bg-white"
               />
               <select
                 value={difficulty}
@@ -55,7 +55,7 @@ export default function Home() {
               placeholder="Enter Room ID (optional)"
               value={roomId}
               onChange={e => setRoomId(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-black"
+              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-black bg-white"
             />
 
             <button
