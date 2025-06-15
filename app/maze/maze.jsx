@@ -244,7 +244,14 @@ export const Maze = () => {
         }
       }
     }
-
+      const { finishX, finishY } = mazeData;
+      ctx.fillStyle = '#FFD700'; 
+      ctx.fillRect(
+      finishY * size + size / 4,
+      finishX * size + size / 4,
+      size / 2,
+      size / 2
+    );
     let positionMap = {};
 
     Object.entries(players).forEach(([id, { x, y }]) => {
