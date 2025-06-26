@@ -10,7 +10,7 @@ import { Chat } from "@/components/Chat";
 const useSocket = () => {
   const socketRef = useRef(null);
   if (!socketRef.current) {
-    socketRef.current = io(`https://2d-maze-game.vercel.app`);
+    socketRef.current = io(`https://twod-maze-game.onrender.com`);
   }
   return socketRef.current;
 };
