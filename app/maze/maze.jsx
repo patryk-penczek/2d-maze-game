@@ -9,11 +9,24 @@ import { Chat } from "@/components/Chat";
 
 const useSocket = () => {
   const socketRef = useRef(null);
+  
+  const socketUrls = {
+    localhost: `http://${window.location.hostname}:3001`,
+    render: 'https://twod-maze-game.onrender.com',
+  };
+
+  const socketUrl =
+    window.location.hostname === 'localhost'
+      ? socketUrls.localhost
+      : socketUrls.render;
+
   if (!socketRef.current) {
-    socketRef.current = io(`https://2d-maze-game.vercel.app`);
+    socketRef.current = io(socketUrl);
   }
+
   return socketRef.current;
 };
+
 
 export const Maze = () => {
   const socket = useSocket();
