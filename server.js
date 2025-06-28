@@ -152,14 +152,55 @@ socket.emit("init", {
     });
 
     socket.on("playerFinished", ({ time }) => {
-      if (room.players[socket.id]) {
-        room.players[socket.id].finishTime = time;
-        io.to(roomId).emit("update", {
-          id: socket.id,
-          pos: room.players[socket.id],
-        });
+      if (!room.players[socket.id]) return;
+    
+      room.players[socket.id].finishTime = time;
+    
+      io.to(roomId).emit("update", {
+        id: socket.id,
+        pos: room.players[socket.id],
+      });
+    
+      // ✅ Zlicz punkty gdy wszyscy skończyli
+      const allFinished = Object.values(room.players).every((p) => p.finishTime != null);
+    
+      if (allFinished) {
+        const { scoringType, points1 = 10, points2 = 7, points3 = 5 } = room.settings;
+    
+        if (scoringType === "points" || scoringType === "placements") {
+          const placements = Object.entries(room.players)
+            .sort(([, a], [, b]) => a.finishTime - b.finishTime);
+        
+          placements.forEach(([id], index) => {
+            // dla points – dodaj punkty
+            if (scoringType === "points") {
+              let points = 0;
+              if (index === 0) points = room.settings.points1 ?? 10;
+              else if (index === 1) points = room.settings.points2 ?? 7;
+              else if (index === 2) points = room.settings.points3 ?? 5;
+              room.players[id].points = (room.players[id].points || 0) + points;
+            }
+        
+            // dla placements – dodaj medal
+            if (scoringType === "placements") {
+              const medals = room.players[id].medals || { gold: 0, silver: 0, bronze: 0 };
+              if (index === 0) medals.gold++;
+              else if (index === 1) medals.silver++;
+              else if (index === 2) medals.bronze++;
+              room.players[id].medals = medals;
+            }
+          });
+        
+          // Emituj aktualizację punktów lub medali
+          io.to(roomId).emit("pointsUpdated", {
+            players: room.players,
+          });
+        }
+        
+        
       }
     });
+    
 
     socket.on("getServerTime", (cb) => {
       cb({ now: Date.now() });

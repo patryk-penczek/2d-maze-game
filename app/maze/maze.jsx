@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ReturnButton } from "@/components/ReturnButton";
 import { Settings } from "@/components/Settings";
 import { Chat } from "@/components/Chat";
+import { Ranking } from "@/components/Ranking";
 
 const useSocket = () => {
   const socketRef = useRef(null);
@@ -107,6 +108,9 @@ socket.on("init", ({ id, players, maze, startX, startY, finishX, finishY, settin
       }));
     });
 
+  
+    
+
     return () => {
       socket.off("init");
       socket.off("newPlayer");
@@ -124,6 +128,27 @@ socket.on("init", ({ id, players, maze, startX, startY, finishX, finishY, settin
     });
 
     return () => socket.off("startGame");
+  }, []);
+
+  useEffect(() => {
+    socket.on("pointsUpdated", ({ players: updated }) => {
+      setPlayers((prev) => {
+        const newPlayers = { ...prev };
+        for (const id in updated) {
+          newPlayers[id] = {
+            ...newPlayers[id],
+            points: updated[id].points ?? newPlayers[id]?.points,
+            medals: updated[id].medals ?? newPlayers[id]?.medals,
+          };
+        }
+        return newPlayers;
+      });
+    });
+    
+  
+    return () => {
+      socket.off("pointsUpdated");
+    };
   }, []);
 
   useEffect(() => {
@@ -251,6 +276,8 @@ if (allFinished && restartCountdown == null) {
     
   });
 
+  
+
   return () => {
     socket.off("settingsUpdated");
   };
@@ -371,6 +398,7 @@ if (allFinished && restartCountdown == null) {
   }, [players, imagesLoaded, mazeData, elapsedTime]);
 
   return (
+    
     <div className="relative w-dvw h-dvh text-white overflow-hidden">
       <ReturnButton socket={socket} />
       <Settings socket={socket} isOwner={players[myId]?.isOwner} playerColor={players[myId]?.color}/>
@@ -408,6 +436,9 @@ if (allFinished && restartCountdown == null) {
           </button>
         )}
       </div>
+      {Object.keys(players).length > 0 && (
+  <Ranking players={players} scoringType={roomSettings?.scoringType || "points"} />
+)}
 
       {mazeData?.maze && elapsedTime >=0 && gameStarted ? (
         <canvas
