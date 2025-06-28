@@ -50,6 +50,9 @@ export function Settings({ socket, isOwner, playerColor: initialColor }: Setting
       scoringType?: string;
       autoStartThreshold?: string | number;
       finishThreshold?: string | number;
+      points1?: number;
+      points2?: number;
+      points3?: number;
     }
 
     socket.on("settingsUpdated", (settings: Settings) => {
@@ -64,9 +67,9 @@ export function Settings({ socket, isOwner, playerColor: initialColor }: Setting
       if (settings.points2 != null) setPoints2(settings.points2);
       if (settings.points3 != null) setPoints3(settings.points3);
       if (settings.autoStartThreshold != null)
-      setAutoStartThreshold(String(settings.autoStartThreshold));
+        setAutoStartThreshold(String(settings.autoStartThreshold));
       if (settings.finishThreshold != null)
-      setFinishThreshold(String(settings.finishThreshold));
+        setFinishThreshold(String(settings.finishThreshold));
     });
 
     const handleMovementUpdated = (movement: string) => {
@@ -214,39 +217,39 @@ export function Settings({ socket, isOwner, playerColor: initialColor }: Setting
               </select>
             </div>
             {scoringType === "points" && (
-  <>
-    <div>
-      <label className="block mb-2 font-medium">Points for 1st place</label>
-      <input
-        type="number"
-        value={points1}
-        onChange={(e) => setPoints1(Number(e.target.value))}
-        disabled={!isOwner}
-        className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
-      />
-    </div>
-    <div>
-      <label className="block mb-2 font-medium">Points for 2nd place</label>
-      <input
-        type="number"
-        value={points2}
-        onChange={(e) => setPoints2(Number(e.target.value))}
-        disabled={!isOwner}
-        className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
-      />
-    </div>
-    <div>
-      <label className="block mb-2 font-medium">Points for 3rd place</label>
-      <input
-        type="number"
-        value={points3}
-        onChange={(e) => setPoints3(Number(e.target.value))}
-        disabled={!isOwner}
-        className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
-      />
-    </div>
-  </>
-)}
+              <>
+                <div>
+                  <label className="block mb-2 font-medium">Points for 1st place</label>
+                  <input
+                    type="number"
+                    value={points1}
+                    onChange={(e) => setPoints1(Number(e.target.value))}
+                    disabled={!isOwner}
+                    className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-2 font-medium">Points for 2nd place</label>
+                  <input
+                    type="number"
+                    value={points2}
+                    onChange={(e) => setPoints2(Number(e.target.value))}
+                    disabled={!isOwner}
+                    className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
+                  />
+                </div>
+                <div>
+                  <label className="block mb-2 font-medium">Points for 3rd place</label>
+                  <input
+                    type="number"
+                    value={points3}
+                    onChange={(e) => setPoints3(Number(e.target.value))}
+                    disabled={!isOwner}
+                    className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
+                  />
+                </div>
+              </>
+            )}
 
 
             <div>
