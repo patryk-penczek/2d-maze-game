@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React from "react";
+import React from 'react';
 
 interface PlayerData {
   nick: string;
@@ -16,16 +16,16 @@ interface PlayerData {
 
 interface RankingProps {
   players: Record<string, PlayerData>;
-  scoringType: "points" | "placements";
+  scoringType: 'points' | 'placements';
 }
 
 export const Ranking: React.FC<RankingProps> = ({ players, scoringType }) => {
   const sortedPlayers = Object.entries(players).sort(([, a], [, b]) => {
-    if (scoringType === "points") {
+    if (scoringType === 'points') {
       return (b.points ?? 0) - (a.points ?? 0);
     }
 
-    if (scoringType === "placements") {
+    if (scoringType === 'placements') {
       const ma = a.medals || { gold: 0, silver: 0, bronze: 0 };
       const mb = b.medals || { gold: 0, silver: 0, bronze: 0 };
       if (mb.gold !== ma.gold) return mb.gold - ma.gold;
@@ -37,13 +37,13 @@ export const Ranking: React.FC<RankingProps> = ({ players, scoringType }) => {
   });
 
   const medal = (index: number) =>
-    index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : "";
+    index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
 
   return (
-    <div className="absolute top-4 left-4 bg-white bg-opacity-90 rounded p-3 shadow-lg text-black z-50 w-72">
+    <div className="bg-white/95 border-2 border-black rounded p-4 shadow-lg text-black z-50 w-80 h-40">
       <h3 className="text-lg font-bold mb-2">🏆 Ranking</h3>
       <ol className="space-y-1">
-        {sortedPlayers.map(([id, player], index) => (
+        {sortedPlayers.slice(0, 3).map(([id, player], index) => (
           <li key={id} className="flex justify-between items-center">
             <div className="flex items-center gap-2">
               <span className="w-5">{medal(index)}</span>
@@ -55,11 +55,10 @@ export const Ranking: React.FC<RankingProps> = ({ players, scoringType }) => {
               <span>{player.nick}</span>
             </div>
             <span className="text-sm text-gray-700 text-right">
-              {scoringType === "points" && `${player.points ?? 0} pts`}
-              {scoringType === "placements" && (
+              {scoringType === 'points' && `${player.points ?? 0} pts`}
+              {scoringType === 'placements' && (
                 <span>
-                  🥇 {player.medals?.gold ?? 0}{" "}
-                  🥈 {player.medals?.silver ?? 0}{" "}
+                  🥇 {player.medals?.gold ?? 0} 🥈 {player.medals?.silver ?? 0}{' '}
                   🥉 {player.medals?.bronze ?? 0}
                 </span>
               )}
