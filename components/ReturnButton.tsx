@@ -25,43 +25,30 @@ export const ReturnButton = ({ socket }: ReturnButtonProps) => {
   };
 
   useEffect(() => {
-    if (open) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(true);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [open]);
-
-  useEffect(() => {
-    if (open && continueRef.current) {
-      continueRef.current.focus();
+    if (!open) {
+      const handleEsc = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') setOpen(true);
+      };
+      window.addEventListener('keydown', handleEsc);
+      return () => window.removeEventListener('keydown', handleEsc);
     }
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleClick = (e: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [open]);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && continueRef.current === document.activeElement) {
+    continueRef.current?.focus();
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && document.activeElement === continueRef.current)
         handleLeave();
-      }
-      if (e.key === 'Escape') {
-        setOpen(false);
-      }
+      if (e.key === 'Escape') setOpen(false);
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    const handleClick = (e: MouseEvent) => {
+      if (modalRef.current && !modalRef.current.contains(e.target as Node))
+        setOpen(false);
+    };
+    window.addEventListener('keydown', handleKey);
+    document.addEventListener('mousedown', handleClick);
+    return () => {
+      window.removeEventListener('keydown', handleKey);
+      document.removeEventListener('mousedown', handleClick);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   return (
@@ -87,7 +74,8 @@ export const ReturnButton = ({ socket }: ReturnButtonProps) => {
               <div className="text-xl font-semibold">Leave the game?</div>
               <div className="text-muted-foreground text-sm">
                 You will have to start over if you return.
-                <br /> Do you want to continue?
+                <br />
+                Do you want to continue?
               </div>
             </div>
             <div className="flex gap-x-2">
@@ -95,7 +83,6 @@ export const ReturnButton = ({ socket }: ReturnButtonProps) => {
                 ref={continueRef}
                 onClick={handleLeave}
                 className="font-medium"
-                autoFocus
               >
                 Continue
               </Button>
