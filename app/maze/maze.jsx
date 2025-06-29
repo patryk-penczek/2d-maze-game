@@ -44,6 +44,7 @@ export const Maze = () => {
   const [mazeData, setMazeData] = useState(null);
   const [players, setPlayers] = useState({});
   const [myId, setMyId] = useState(null);
+  
   const [elapsedTime, setElapsedTime] = useState(0);
   const [startTime, setStartTime] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
@@ -76,7 +77,6 @@ socket.on("init", ({ id, players, maze, startX, startY, finishX, finishY, settin
   setRoomSettings(settings || {});
   setStartTime(null);
   setElapsedTime(0);
-  setPlayerColor(players[socket.id]?.color || "");
   elapsedTimeRef.current = 0;
   setRestartCountdown(null);
   setMaxRoundTime(settings?.maxRoundTime ?? 120);
