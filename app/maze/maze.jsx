@@ -75,7 +75,6 @@ export const Maze = () => {
         setRoomSettings(settings || {});
         setStartTime(null);
         setElapsedTime(0);
-        setPlayerColor(players[socket.id]?.color || '');
         elapsedTimeRef.current = 0;
         setRestartCountdown(null);
         setMaxRoundTime(settings?.maxRoundTime ?? 120);

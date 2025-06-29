@@ -40,6 +40,7 @@ export function Settings({
   const [points1, setPoints1] = useState(10);
   const [points2, setPoints2] = useState(7);
   const [points3, setPoints3] = useState(5);
+  const [lobbyOpen, setLobbyOpen] = useState(isOwner);
 
   useEffect(() => {
     if (!socket) return;
@@ -180,182 +181,211 @@ export function Settings({
               />
             </div>
           </div>
-          <h3 className="font-semibold text-lg mb-2 mt-4">Lobby Settings</h3>
-          <label className="text-sm block mb-2 font-medium">Difficulty</label>
-          <select
-            value={difficulty}
-            onChange={(e) => setDifficulty(e.target.value)}
-            disabled={!isOwner}
-            className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
-          >
-            <option value="easy">Easy</option>
-            <option value="medium">Medium</option>
-            <option value="hard">Hard</option>
-            <option value="extreme">Extreme</option>
-          </select>
-        </div>
 
-        <div>
-          <label className="text-sm block mb-2 font-medium">
-            Restart delay (sec)
-          </label>
-          <input
-            type="number"
-            value={restartDelay}
-            min={5}
-            max={60}
-            onChange={(e) => setRestartDelay(Number(e.target.value))}
-            disabled={!isOwner}
-            className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
-          />
-        </div>
-
-        <div>
-          <label className="text-sm block mb-2 font-medium">Max Players</label>
-          <input
-            type="number"
-            value={maxPlayers}
-            min={2}
-            max={32}
-            onChange={(e) => setMaxPlayers(Number(e.target.value))}
-            disabled={!isOwner}
-            className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
-          />
-        </div>
-
-        <div>
-          <label className="text-sm block mb-2 font-medium">
-            Max Round Time (sec)
-          </label>
-          <input
-            type="number"
-            value={maxRoundTime}
-            min={10}
-            max={600}
-            onChange={(e) => setMaxRoundTime(Number(e.target.value))}
-            disabled={!isOwner}
-            className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
-          />
-        </div>
-
-        <div>
-          <label className="text-sm block mb-2 font-medium">
-            Scoring System
-          </label>
-          <select
-            value={scoringType}
-            onChange={(e) => setScoringType(e.target.value)}
-            disabled={!isOwner}
-            className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
-          >
-            <option value="points">Points</option>
-            <option value="placements">Placements</option>
-          </select>
-        </div>
-        {scoringType === 'points' && (
-          <>
-            <div>
-              <label className="text-sm block mb-2 font-medium">
-                Points for 1st place
-              </label>
-              <input
-                type="number"
-                value={points1}
-                onChange={(e) => setPoints1(Number(e.target.value))}
-                disabled={!isOwner}
-                className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
-              />
+          <div>
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-lg mb-2">Lobby Settings</h3>
+              {!isOwner && (
+                <button
+                  type="button"
+                  onClick={() => setLobbyOpen((open) => !open)}
+                  className="text-sm underline text-white/80 hover:text-white focus:outline-none"
+                  aria-expanded={lobbyOpen}
+                  aria-controls="lobby-settings-section"
+                >
+                  {lobbyOpen ? 'Hide' : 'Show'}
+                </button>
+              )}
             </div>
-            <div>
-              <label className="text-sm block mb-2 font-medium">
-                Points for 2nd place
-              </label>
-              <input
-                type="number"
-                value={points2}
-                onChange={(e) => setPoints2(Number(e.target.value))}
-                disabled={!isOwner}
-                className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
-              />
-            </div>
-            <div>
-              <label className="text-sm block mb-2 font-medium">
-                Points for 3rd place
-              </label>
-              <input
-                type="number"
-                value={points3}
-                onChange={(e) => setPoints3(Number(e.target.value))}
-                disabled={!isOwner}
-                className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
-              />
-            </div>
-          </>
-        )}
+            {(isOwner || lobbyOpen) && (
+              <div
+                id="lobby-settings-section"
+                className="space-y-4 transition-all duration-300"
+              >
+                <label className="text-sm block mb-2 font-medium">
+                  Difficulty
+                </label>
+                <select
+                  value={difficulty}
+                  onChange={(e) => setDifficulty(e.target.value)}
+                  disabled={!isOwner}
+                  className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
+                >
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                  <option value="extreme">Extreme</option>
+                </select>
 
-        <div>
-          <label className="text-sm block mb-2 font-medium">
-            Auto-start Threshold
-          </label>
-          <select
-            value={autoStartThreshold}
-            onChange={(e) => setAutoStartThreshold(e.target.value)}
-            disabled={!isOwner}
-            className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
-          >
-            {autoStartOptions.map((option) => (
-              <option key={option} value={option}>
-                {typeof option === 'string' ? option : `${option} players`}
-              </option>
-            ))}
-          </select>
-        </div>
+                <div>
+                  <label className="text-sm block mb-2 font-medium">
+                    Restart delay (sec)
+                  </label>
+                  <input
+                    type="number"
+                    value={restartDelay}
+                    min={5}
+                    max={60}
+                    onChange={(e) => setRestartDelay(Number(e.target.value))}
+                    disabled={!isOwner}
+                    className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
+                  />
+                </div>
 
-        <div>
-          <label className="text-sm block mb-2 font-medium">
-            Finish Threshold
-          </label>
-          <select
-            value={finishThreshold}
-            onChange={(e) => setFinishThreshold(e.target.value)}
-            disabled={!isOwner}
-            className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
-          >
-            {finishThresholdOptions.map((option) => (
-              <option key={option} value={option}>
-                {typeof option === 'string'
-                  ? option
-                  : `${option} player${option > 1 ? 's' : ''}`}
-              </option>
-            ))}
-          </select>
-        </div>
+                <div>
+                  <label className="text-sm block mb-2 font-medium">
+                    Max Players
+                  </label>
+                  <input
+                    type="number"
+                    value={maxPlayers}
+                    min={2}
+                    max={32}
+                    onChange={(e) => setMaxPlayers(Number(e.target.value))}
+                    disabled={!isOwner}
+                    className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
+                  />
+                </div>
 
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={autoRestart}
-            onChange={(e) => setAutoRestart(e.target.checked)}
-            disabled={!isOwner}
-          />
-          <label className="text-sm font-medium">Auto-Restart</label>
-        </div>
+                <div>
+                  <label className="text-sm block mb-2 font-medium">
+                    Max Round Time (sec)
+                  </label>
+                  <input
+                    type="number"
+                    value={maxRoundTime}
+                    min={10}
+                    max={600}
+                    onChange={(e) => setMaxRoundTime(Number(e.target.value))}
+                    disabled={!isOwner}
+                    className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
+                  />
+                </div>
 
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={chatEnabled}
-            onChange={(e) => setChatEnabled(e.target.checked)}
-            disabled={!isOwner}
-          />
-          <label className="text-sm font-medium">Enable Chat</label>
+                <div>
+                  <label className="text-sm block mb-2 font-medium">
+                    Scoring System
+                  </label>
+                  <select
+                    value={scoringType}
+                    onChange={(e) => setScoringType(e.target.value)}
+                    disabled={!isOwner}
+                    className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
+                  >
+                    <option value="points">Points</option>
+                    <option value="placements">Placements</option>
+                  </select>
+                </div>
+                {scoringType === 'points' && (
+                  <>
+                    <div>
+                      <label className="text-sm block mb-2 font-medium">
+                        Points for 1st place
+                      </label>
+                      <input
+                        type="number"
+                        value={points1}
+                        onChange={(e) => setPoints1(Number(e.target.value))}
+                        disabled={!isOwner}
+                        className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm block mb-2 font-medium">
+                        Points for 2nd place
+                      </label>
+                      <input
+                        type="number"
+                        value={points2}
+                        onChange={(e) => setPoints2(Number(e.target.value))}
+                        disabled={!isOwner}
+                        className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm block mb-2 font-medium">
+                        Points for 3rd place
+                      </label>
+                      <input
+                        type="number"
+                        value={points3}
+                        onChange={(e) => setPoints3(Number(e.target.value))}
+                        disabled={!isOwner}
+                        className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <label className="text-sm block mb-2 font-medium">
+                    Auto-start Threshold
+                  </label>
+                  <select
+                    value={autoStartThreshold}
+                    onChange={(e) => setAutoStartThreshold(e.target.value)}
+                    disabled={!isOwner}
+                    className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
+                  >
+                    {autoStartOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {typeof option === 'string'
+                          ? option
+                          : `${option} players`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm block mb-2 font-medium">
+                    Finish Threshold
+                  </label>
+                  <select
+                    value={finishThreshold}
+                    onChange={(e) => setFinishThreshold(e.target.value)}
+                    disabled={!isOwner}
+                    className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
+                  >
+                    {finishThresholdOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {typeof option === 'string'
+                          ? option
+                          : `${option} player${option > 1 ? 's' : ''}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={autoRestart}
+                    onChange={(e) => setAutoRestart(e.target.checked)}
+                    disabled={!isOwner}
+                  />
+                  <label className="text-sm font-medium">Auto-Restart</label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={chatEnabled}
+                    onChange={(e) => setChatEnabled(e.target.checked)}
+                    disabled={!isOwner}
+                  />
+                  <label className="text-sm font-medium">Enable Chat</label>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         <SheetFooter>
           <SheetClose asChild>
             <Button
               onClick={handleSave}
               variant="outline"
-              className="text-black mt-2 cursor-pointer w-full"
+              className="text-black my-2 cursor-pointer w-full"
             >
               Save changes
             </Button>
