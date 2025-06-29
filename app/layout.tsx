@@ -1,6 +1,5 @@
 import { Background } from "@/components/Background";
 import { Instruction } from "@/components/Instruction";
-import { Settings } from "@/components/Settings";
 import { Metadata } from "next";
 import { Suspense } from "react";
 import "./globals.css";
@@ -20,7 +19,6 @@ export default function RootLayout({
       <body className="bg-black">
         <Background />
         <Instruction />
-        <Settings />
         <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
       </body>
     </html>

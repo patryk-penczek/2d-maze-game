@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { DoorOpenIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Socket } from "socket.io-client";
+import type { Socket } from "socket.io";
 
 type ReturnButtonProps = {
   socket?: Socket;

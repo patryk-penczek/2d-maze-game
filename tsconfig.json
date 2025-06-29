@@ -30,7 +30,8 @@
     "app/maze/maze.jsx",
     "app/page.jsx",
     "app/page.jsx",
-    "app/page.jsx"
+    "app/page.jsx",
+    "**/*.jsx",
   ],
   "exclude": ["node_modules"]
 }

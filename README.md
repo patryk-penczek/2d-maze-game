@@ -3,12 +3,12 @@
 
 ## Opis
 
-"2D Maze Game" to gra wideo, w której gracze muszą współzawodniczyć w pokonaniu trudnego, losowo generowanego labiryntu. Celem gry jest dotarcie do wyjścia z labiryntu, które zmienia się za każdym razem, kiedy zaczynasz nową grę. Gra jest przeznaczona dla dwóch graczy, którzy będą rywalizować o to, kto jako pierwszy znajdzie wyjście.
+"2D Maze Game" to gra wideo, w której celem jest jak najszybsze odnalezienie wyjścia z losowo generowanego labiryntu. Gra oferuje tryb jednoosobowy z trzema poziomami trudności: łatwym, średnim i trudnym. Dodatkowo dostępna jest opcja gry online, w której może brać udział dowolna liczba graczy – rywalizują oni ze sobą, próbując jako pierwsi wydostać się z labiryntu."
 
 ## Funkcje
 
 - **Losowy labirynt** – Labirynty są generowane losowo za każdym razem, co sprawia, że każda rozgrywka jest inna.
-- **Tryb dla dwóch graczy** – Dwa osoby mogą grać jednocześnie, z możliwością rywalizowania lub współpracy w celu pokonania labiryntu.
+- **Tryb multiplayer** – Możliwość gry onlnie z dowolną ilością osób.
 - **Różne poziomy trudności** – Gra oferuje różne ustawienia trudności, w tym wielkość labiryntu i ilość przeszkód, które mogą utrudniać dotarcie do wyjścia.
 - **Prosta mechanika sterowania** – Gracze poruszają się po labiryncie za pomocą klawiszy strzałek lub innych przypisanych klawiszy.
 
@@ -42,14 +42,15 @@
 
    
 ## Sterowanie
+"Są dwie możliwości sterowania postacią"
 
-- **Gracz 1:**
+- **1:**
   - Strzałka w górę: porusza w górę
   - Strzałka w dół: porusza w dół
   - Strzałka w lewo: porusza w lewo
   - Strzałka w prawo: porusza w prawo
 
-- **Gracz 2:**
+- **2:**
   - W: porusza w górę
   - S: porusza w dół
   - A: porusza w lewo
