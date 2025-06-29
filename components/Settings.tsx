@@ -36,6 +36,7 @@ export function Settings({ socket, isOwner, playerColor: initialColor }: Setting
   const [points1, setPoints1] = useState(10);
   const [points2, setPoints2] = useState(7);
   const [points3, setPoints3] = useState(5);
+  const [redDotsCount, setRedDotsCount] = useState(5);
 
   useEffect(() => {
     if (!socket) return;
@@ -53,6 +54,7 @@ export function Settings({ socket, isOwner, playerColor: initialColor }: Setting
       points1?: number;
       points2?: number;
       points3?: number;
+      redDotsCount?: number;
     }
 
     socket.on("settingsUpdated", (settings: Settings) => {
@@ -66,6 +68,7 @@ export function Settings({ socket, isOwner, playerColor: initialColor }: Setting
       if (settings.points1 != null) setPoints1(settings.points1);
       if (settings.points2 != null) setPoints2(settings.points2);
       if (settings.points3 != null) setPoints3(settings.points3);
+      if (settings.redDotsCount != null) setRedDotsCount(settings.redDotsCount);
       if (settings.autoStartThreshold != null)
         setAutoStartThreshold(String(settings.autoStartThreshold));
       if (settings.finishThreshold != null)
@@ -79,19 +82,7 @@ export function Settings({ socket, isOwner, playerColor: initialColor }: Setting
     socket.on("movementUpdated", handleMovementUpdated);
 
     return () => {
-      socket.off("settingsUpdated", (settings: Settings) => {
-        if (settings.difficulty) setDifficulty(settings.difficulty);
-        if (settings.restartDelay != null) setRestartDelay(settings.restartDelay);
-        if (settings.maxPlayers != null) setMaxPlayers(settings.maxPlayers);
-        if (settings.maxRoundTime != null) setMaxRoundTime(settings.maxRoundTime);
-        if (settings.chatEnabled != null) setChatEnabled(settings.chatEnabled);
-        if (settings.autoRestart != null) setAutoRestart(settings.autoRestart);
-        if (settings.scoringType) setScoringType(settings.scoringType);
-        if (settings.autoStartThreshold != null)
-          setAutoStartThreshold(String(settings.autoStartThreshold));
-        if (settings.finishThreshold != null)
-          setFinishThreshold(String(settings.finishThreshold));
-      });
+      
       socket.off("movementUpdated", handleMovementUpdated);
     };
   }, [socket]);
@@ -111,6 +102,7 @@ export function Settings({ socket, isOwner, playerColor: initialColor }: Setting
         points1,
         points2,
         points3,
+        redDotsCount,
         autoStartThreshold,
         finishThreshold,
       });
@@ -205,6 +197,19 @@ export function Settings({ socket, isOwner, playerColor: initialColor }: Setting
             </div>
 
             <div>
+              <label className="block mb-2 font-medium">Red Dots Count (0-15)</label>
+              <input
+                type="number"
+                value={redDotsCount}
+                min={0}
+                max={15}
+                onChange={(e) => setRedDotsCount(Number(e.target.value))}
+                disabled={!isOwner}
+                className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
+              />
+            </div>
+
+            <div>
               <label className="block mb-2 font-medium">Scoring System</label>
               <select
                 value={scoringType}
@@ -216,6 +221,7 @@ export function Settings({ socket, isOwner, playerColor: initialColor }: Setting
                 <option value="placements">Placements</option>
               </select>
             </div>
+
             {scoringType === "points" && (
               <>
                 <div>
@@ -250,7 +256,6 @@ export function Settings({ socket, isOwner, playerColor: initialColor }: Setting
                 </div>
               </>
             )}
-
 
             <div>
               <label className="block mb-2 font-medium">Auto-start Threshold</label>

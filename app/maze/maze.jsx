@@ -28,7 +28,6 @@ const useSocket = () => {
   return socketRef.current;
 };
 
-
 export const Maze = () => {
   const socket = useSocket();
   const router = useRouter();
@@ -50,40 +49,37 @@ export const Maze = () => {
   const [restartDelay, setRestartDelay] = useState(15);
   const [maxRoundTime, setMaxRoundTime] = useState(120);
   const [roomSettings, setRoomSettings] = useState({});
-
+  const [visionRadius, setVisionRadius] = useState(15);
 
   const size = 15;
 
-useEffect(() => {
-  if (typeof window === "undefined") return;
-  const params = new URLSearchParams(window.location.search);
-  const playerName =
-    params.get("name") || `Player${Math.floor(Math.random() * 1000)}`;
-  const room = params.get("room") || "default";
-  setRoomId(room);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const playerName =
+      params.get("name") || `Player${Math.floor(Math.random() * 1000)}`;
+    const room = params.get("room") || "default";
+    setRoomId(room);
 
-  const difficulty = params.get("difficulty") || "easy";
-  socket.emit("joinRoom", { roomId: room, name: playerName, difficulty });
-}, []);
-
+    const difficulty = params.get("difficulty") || "easy";
+    socket.emit("joinRoom", { roomId: room, name: playerName, difficulty });
+  }, []);
 
   useEffect(() => {
-socket.on("init", ({ id, players, maze, startX, startY, finishX, finishY, settings }) => {
-  setMyId(id);
-  setPlayers(players);
-  setMazeData(maze ? { maze, startX, startY, finishX, finishY } : null);
-  setGameStarted(false);
-  setRoomSettings(settings || {});
-  setStartTime(null);
-  setElapsedTime(0);
-  setPlayerColor(players[socket.id]?.color || "");
-  elapsedTimeRef.current = 0;
-  setRestartCountdown(null);
-  setMaxRoundTime(settings?.maxRoundTime ?? 120);
-  setRestartDelay(settings?.restartDelay ?? 15);
-  
-});
-
+    socket.on("init", ({ id, players, maze, startX, startY, finishX, finishY, redDots, settings }) => {
+      setMyId(id);
+      setPlayers(players);
+      setMazeData(maze ? { maze, startX, startY, finishX, finishY, redDots } : null);
+      setGameStarted(false);
+      setRoomSettings(settings || {});
+      setStartTime(null);
+      setElapsedTime(0);
+      setVisionRadius(15);
+      elapsedTimeRef.current = 0;
+      setRestartCountdown(null);
+      setMaxRoundTime(settings?.maxRoundTime ?? 120);
+      setRestartDelay(settings?.restartDelay ?? 15);
+    });
 
     socket.on("newPlayer", ({ id, pos }) => {
       setPlayers((prev) => ({ ...prev, [id]: pos }));
@@ -108,8 +104,18 @@ socket.on("init", ({ id, players, maze, startX, startY, finishX, finishY, settin
       }));
     });
 
-  
+    socket.on("redDotCollected", ({ playerId, remainingDots, visionRadius }) => {
+  if (playerId === myId) {
+    console.log("Zebrano czerwoną kropkę, nowy promień:", visionRadius);
+    setVisionRadius(visionRadius);
     
+    setTimeout(() => {
+      console.log("Przywracanie normalnego widzenia");
+      setVisionRadius(15);
+    }, 5000);
+  }
+  setMazeData(prev => prev ? { ...prev, redDots: remainingDots } : null);
+});
 
     return () => {
       socket.off("init");
@@ -117,8 +123,9 @@ socket.on("init", ({ id, players, maze, startX, startY, finishX, finishY, settin
       socket.off("update");
       socket.off("removePlayer");
       socket.off("movementUpdated");
+      socket.off("redDotCollected");
     };
-  }, []);
+  }, [myId]);
 
   useEffect(() => {
     socket.on("startGame", ({ serverStart }) => {
@@ -145,7 +152,6 @@ socket.on("init", ({ id, players, maze, startX, startY, finishX, finishY, settin
       });
     });
     
-  
     return () => {
       socket.off("pointsUpdated");
     };
@@ -159,13 +165,11 @@ socket.on("init", ({ id, players, maze, startX, startY, finishX, finishY, settin
       setElapsedTime(elapsed);
       elapsedTimeRef.current = elapsed;
 
-          if (elapsed >= maxRoundTime){
-      setGameStarted(false);
-      setStartTime(null);
-    }
+      if (elapsed >= maxRoundTime) {
+        setGameStarted(false);
+        setStartTime(null);
+      }
     }, 10);
-
-
 
     const syncIntervalId = setInterval(() => {
       socket.emit("getServerTime", ({ now }) => {
@@ -178,7 +182,7 @@ socket.on("init", ({ id, players, maze, startX, startY, finishX, finishY, settin
       clearInterval(intervalId);
       clearInterval(syncIntervalId);
     };
-  }, [startTime]);
+  }, [startTime, maxRoundTime]);
 
   useEffect(() => {
     if (!gameStarted || !startTime) return;
@@ -188,26 +192,26 @@ socket.on("init", ({ id, players, maze, startX, startY, finishX, finishY, settin
       (player) => player.finishTime != null
     );
 
-if (allFinished && restartCountdown == null) {
-  const delay = roomSettings?.restartDelay ?? 15;
-  let countdown = delay;
-  setRestartCountdown(countdown);
+    if (allFinished && restartCountdown == null) {
+      const delay = roomSettings?.restartDelay ?? 15;
+      let countdown = delay;
+      setRestartCountdown(countdown);
 
-  const countdownInterval = setInterval(() => {
-    countdown--;
-    setRestartCountdown(countdown);
-    if (countdown <= 0) {
-      clearInterval(countdownInterval);
-      setRestartCountdown(null);
-      setGameStarted(false);
-      setStartTime(null);
-      if (roomSettings?.autoRestart !== false && players[myId]?.isOwner) {
-        socket.emit("newGame");
-      }
+      const countdownInterval = setInterval(() => {
+        countdown--;
+        setRestartCountdown(countdown);
+        if (countdown <= 0) {
+          clearInterval(countdownInterval);
+          setRestartCountdown(null);
+          setGameStarted(false);
+          setStartTime(null);
+          if (roomSettings?.autoRestart !== false && players[myId]?.isOwner) {
+            socket.emit("newGame");
+          }
+        }
+      }, 1000);
     }
-  }, 1000);
-}
-  }, [players, gameStarted, startTime]);
+  }, [players, gameStarted, startTime, roomSettings, myId]);
 
   useEffect(() => {
     if (!mazeData || !mazeData.maze) return;
@@ -256,33 +260,30 @@ if (allFinished && restartCountdown == null) {
     if (e.key === "k") x = finishX, y = finishY;
 
     const newPos = { x, y };
-    setPlayers((prev) => ({ ...prev, [myId]: { ...prev[myId], ...newPos } }));
-    socket.emit("move", newPos);
+setPlayers((prev) => ({ ...prev, [myId]: { ...prev[myId], ...newPos } })); 
+socket.emit("move", newPos);
 
     if (x === finishX && y === finishY && players[myId]?.finishTime == null) {
       const finishedAt = elapsedTimeRef.current;
       socket.emit("playerFinished", { time: finishedAt });
     }
   };
+
   useEffect(() => {
-  socket.on("settingsUpdated", (settings) => {
-    setRoomSettings(settings || {});
-    if (settings.maxRoundTime != null) {
-  setMaxRoundTime(settings.maxRoundTime);
-}
-    if (settings.restartDelay != null) {
-      setRestartDelay(settings.restartDelay);
-    }
-    
-  });
+    socket.on("settingsUpdated", (settings) => {
+      setRoomSettings(settings || {});
+      if (settings.maxRoundTime != null) {
+        setMaxRoundTime(settings.maxRoundTime);
+      }
+      if (settings.restartDelay != null) {
+        setRestartDelay(settings.restartDelay);
+      }
+    });
 
-  
-
-  return () => {
-    socket.off("settingsUpdated");
-  };
-}, []);
-
+    return () => {
+      socket.off("settingsUpdated");
+    };
+  }, []);
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
@@ -291,7 +292,7 @@ if (allFinished && restartCountdown == null) {
 
   useEffect(() => {
     if (!imagesLoaded || !mazeData || !mazeData.maze) return;
-    const { maze } = mazeData;
+    const { maze, redDots } = mazeData;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -304,112 +305,87 @@ if (allFinished && restartCountdown == null) {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const isWall = (x, y) => maze[x]?.[y] === 1;
-    const isPath = (x, y) => maze[x]?.[y] === 0;
-    const radius = size / 3;
-
-    ctx.fillStyle = '#31572c'
-
+    // Draw maze background
+    ctx.fillStyle = '#31572c';
     for (let i = 0; i < rows; i++) {
       for (let j = 0; j < cols; j++) {
-        if (isWall(i, j)) {
+        if (maze[i][j] === 1) {
           const x = j * size;
           const y = i * size;
-
-          const hasTopLeftL =
-            isPath(i - 1, j) && isPath(i, j - 1) && isPath(i - 1, j - 1);
-          const hasTopRightL =
-            isPath(i - 1, j) && isPath(i, j + 1) && isPath(i - 1, j + 1);
-          const hasBottomLeftL =
-            isPath(i + 1, j) && isPath(i, j - 1) && isPath(i + 1, j - 1);
-          const hasBottomRightL =
-            isPath(i + 1, j) && isPath(i, j + 1) && isPath(i + 1, j + 1);
-
-          ctx.beginPath();
-
-          if (hasTopLeftL) {
-            ctx.moveTo(x + radius, y);
-          } else {
-            ctx.moveTo(x, y);
-          }
-
-          if (hasTopRightL) {
-            ctx.lineTo(x + size - radius, y);
-            ctx.arcTo(x + size, y, x + size, y + radius, radius);
-          } else {
-            ctx.lineTo(x + size, y);
-          }
-
-          if (hasBottomRightL) {
-            ctx.lineTo(x + size, y + size - radius);
-            ctx.arcTo(x + size, y + size, x + size - radius, y + size, radius);
-          } else {
-            ctx.lineTo(x + size, y + size);
-          }
-
-          if (hasBottomLeftL) {
-            ctx.lineTo(x + radius, y + size);
-            ctx.arcTo(x, y + size, x, y + size - radius, radius);
-          } else {
-            ctx.lineTo(x, y + size);
-          }
-
-          if (hasTopLeftL) {
-            ctx.lineTo(x, y + radius);
-            ctx.arcTo(x, y, x + radius, y, radius);
-          } else {
-            ctx.lineTo(x, y);
-          }
-          ctx.closePath();
-          ctx.fill();
+          ctx.fillRect(x, y, size, size);
         }
       }
     }
-      const { finishX, finishY } = mazeData;
-      ctx.fillStyle = '#FFD700'; 
-      ctx.fillRect(
+
+    // Draw finish point
+    const { finishX, finishY } = mazeData;
+    ctx.fillStyle = '#FFD700';
+    ctx.fillRect(
       finishY * size + size / 4,
       finishX * size + size / 4,
       size / 2,
       size / 2
     );
-    let positionMap = {};
 
-    Object.entries(players).forEach(([id, { x, y }]) => {
-      const key = `${x},${y}`;
-      if (!positionMap[key]) positionMap[key] = [];
-      positionMap[key].push(id);
-    });
-
-    Object.entries(positionMap).forEach(([key, ids]) => {
-      const [x, y] = key.split(",").map(Number);
-      ids.forEach((id, index) => {
-        const player = players[id];
-        if (!player) return;
-        const offset = index * 4;
+    // Draw red dots
+    if (redDots && redDots.length > 0) {
+      redDots.forEach(({ x, y }) => {
         ctx.beginPath();
         ctx.arc(
-          y * size + size / 2 + offset,
-          x * size + size / 2 + offset,
-          size / 3,
+          y * size + size / 2,
+          x * size + size / 2,
+          size / 4,
           0,
           2 * Math.PI
         );
-        ctx.fillStyle = player.color || "gray";
+        ctx.fillStyle = '#ff0000';
         ctx.fill();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "black";
-        ctx.stroke();
       });
+    }
+
+    // Draw players
+    Object.entries(players).forEach(([id, { x, y, color }]) => {
+      ctx.beginPath();
+      ctx.arc(
+        y * size + size / 2,
+        x * size + size / 2,
+        size / 3,
+        0,
+        2 * Math.PI
+      );
+      ctx.fillStyle = color || "gray";
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "black";
+      ctx.stroke();
     });
-  }, [players, imagesLoaded, mazeData, elapsedTime]);
+
+    // Apply flashlight effect if vision radius is reduced
+    if (visionRadius < 15 && players[myId]) {
+      const { x: playerX, y: playerY } = players[myId];
+      const gradient = ctx.createRadialGradient(
+        playerY * size + size / 2,
+        playerX * size + size / 2,
+        0,
+        playerY * size + size / 2,
+        playerX * size + size / 2,
+        visionRadius * size
+      );
+      gradient.addColorStop(0, 'rgba(0,0,0,0.1)');
+      gradient.addColorStop(0.8, 'rgba(0,0,0,0.7)');
+      gradient.addColorStop(1, 'rgba(0,0,0,0.95)');
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+  }, [players, imagesLoaded, mazeData, elapsedTime, visionRadius, myId]);
 
   return (
-    
     <div className="relative w-dvw h-dvh text-white overflow-hidden">
       <ReturnButton socket={socket} />
       <Settings socket={socket} isOwner={players[myId]?.isOwner} playerColor={players[myId]?.color}/>
-<div className="bg-[#132a13] p-4 rounded-lg shadow-2xl absolute top-10 left-1/2 transform -translate-x-1/2 text-2xl z-50">
+      
+      <div className="bg-[#132a13] p-4 rounded-lg shadow-2xl absolute top-10 left-1/2 transform -translate-x-1/2 text-2xl z-50">
         {elapsedTime < 0
           ? `Start za ${Math.ceil(-elapsedTime)}s`
           : `Czas: ${elapsedTime.toFixed(2)}s${restartCountdown != null ? ` (${restartCountdown}s left)` : ""}`}
@@ -443,11 +419,12 @@ if (allFinished && restartCountdown == null) {
           </button>
         )}
       </div>
-      {Object.keys(players).length > 0 && (
-  <Ranking players={players} scoringType={roomSettings?.scoringType || "points"} />
-)}
 
-      {mazeData?.maze && elapsedTime >=0 && gameStarted ? (
+      {Object.keys(players).length > 0 && (
+        <Ranking players={players} scoringType={roomSettings?.scoringType || "points"} />
+      )}
+
+      {mazeData?.maze && elapsedTime >= 0 && gameStarted ? (
         <canvas
           ref={canvasRef}
           className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white z-0 border-12 border-[#132a13] shadow-xl rounded-md"
@@ -458,7 +435,6 @@ if (allFinished && restartCountdown == null) {
         </div>
       )}
 
-     
       <div className="absolute right-4 top-20 bg-white text-black p-4 border-2 border-[#132a13] shadow-xl rounded-md text-sm z-50">
         <h2 className="font-bold mb-2">Gracze</h2>
         <ul className="space-y-1">
@@ -491,16 +467,16 @@ if (allFinished && restartCountdown == null) {
             ))}
         </ul>
       </div>
-            {roomSettings.chatEnabled && (
+
+      {roomSettings.chatEnabled && (
         <div className="absolute bottom-24 left-4 w-80 z-50">
           <Chat socket={socket}
-    myId={myId}
-    players={players}
-    chatEnabled={roomSettings.chatEnabled}
-  roomId={roomId} />
+            myId={myId}
+            players={players}
+            chatEnabled={roomSettings.chatEnabled}
+            roomId={roomId} />
         </div>
       )}
-
     </div>
   );
 };

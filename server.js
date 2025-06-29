@@ -34,14 +34,12 @@ function shouldAutoStart(room) {
   const readyCount = players.filter((p) => p.isReady).length;
   const thresholdRaw = room.settings.autoStartThreshold;
 
-  // Obsługa wartości procentowych np. "75%"
   if (typeof thresholdRaw === "string" && thresholdRaw.endsWith("%")) {
     const percent = parseInt(thresholdRaw.replace("%", ""));
     const required = Math.ceil((percent / 100) * players.length);
     return readyCount >= required;
   }
 
-  // Obsługa wartości liczbowych jako string lub number
   const threshold = parseInt(thresholdRaw, 10);
   if (!isNaN(threshold)) {
     return readyCount >= threshold;
@@ -50,37 +48,59 @@ function shouldAutoStart(room) {
   return false;
 }
 
+function generateMazeWithRedDots(rows, cols, redDotsCount = 5) {
+  const mazeData = generateMaze(rows, cols);
+  const { maze, startX, startY, finishX, finishY } = mazeData;
+
+  const redDots = [];
+  for (let i = 0; i < redDotsCount; i++) {
+    let x, y;
+    do {
+      x = Math.floor(Math.random() * rows);
+      y = Math.floor(Math.random() * cols);
+    } while (
+      maze[x][y] !== 0 || 
+      (x === startX && y === startY) || 
+      (x === finishX && y === finishY) ||
+      redDots.some(dot => dot.x === x && dot.y === y)
+    );
+    redDots.push({ x, y });
+  }
+
+  return { ...mazeData, redDots };
+}
 
 io.on("connection", (socket) => {
-  
   socket.on("joinRoom", ({ roomId, name, difficulty }) => {
     socket.roomId = roomId;
 
-if (!rooms[roomId]) {
-  rooms[roomId] = {
-    players: {},
-    ownerId: socket.id,
-    gameStarted: false,
-    mazeData: null,
-    settings: {
-      difficulty,
-      restartDelay: 15,
-      maxPlayers: 16,
-      autoStartThreshold: "75%",
-      finishThreshold: "100%",
-      chatEnabled: true,
-      autoRestart: true,
-      scoringType: "points",
-      maxRoundTime: 120,
-    },
-  };
-}
+    if (!rooms[roomId]) {
+      rooms[roomId] = {
+        players: {},
+        ownerId: socket.id,
+        gameStarted: false,
+        mazeData: null,
+        settings: {
+          difficulty,
+          restartDelay: 15,
+          maxPlayers: 16,
+          autoStartThreshold: "75%",
+          finishThreshold: "100%",
+          chatEnabled: true,
+          autoRestart: true,
+          scoringType: "points",
+          maxRoundTime: 120,
+          redDotsCount: 5,
+        },
+      };
+    }
 
     const room = rooms[roomId];
     if (room && Object.keys(room.players).length >= room.settings.maxPlayers) {
-  socket.emit("roomFull", { message: "Room is full" });
-  return;
-}
+      socket.emit("roomFull", { message: "Room is full" });
+      return;
+    }
+
     const color = COLORS[colorIndex % COLORS.length];
     colorIndex++;
 
@@ -93,6 +113,7 @@ if (!rooms[roomId]) {
       isReady: false,
       finishTime: null,
       movement: "arrows",
+      visionRadius: 15,
     };
 
     room.players[socket.id] = playerData;
@@ -103,29 +124,57 @@ if (!rooms[roomId]) {
     const startY = room.mazeData?.startY ?? 0;
     const finishX = room.mazeData?.finishX ?? 0;
     const finishY = room.mazeData?.finishY ?? 0;
+    const redDots = room.mazeData?.redDots || [];
 
-socket.emit("init", {
-  id: socket.id,
-  players: room.players,
-  maze,
-  startX,
-  startY,
-  finishX,
-  finishY,
-  settings: room.settings, // 👈 TO JEST KLUCZOWE!
-});
-
+    socket.emit("init", {
+      id: socket.id,
+      players: room.players,
+      maze,
+      startX,
+      startY,
+      finishX,
+      finishY,
+      redDots,
+      settings: room.settings,
+    });
 
     socket.to(roomId).emit("newPlayer", { id: socket.id, pos: playerData });
 
     socket.on("move", (pos) => {
-      if (room.players[socket.id]) {
-        room.players[socket.id] = { ...room.players[socket.id], ...pos };
-        socket.to(roomId).emit("update", {
-          id: socket.id,
-          pos: room.players[socket.id],
-        });
+      if (!room.players[socket.id]) return;
+
+      const newPos = { ...room.players[socket.id], ...pos };
+      room.players[socket.id] = newPos;
+
+      // Sprawdzanie kolizji z czerwonymi kropkami
+      if (room.mazeData?.redDots) {
+        const dotIndex = room.mazeData.redDots.findIndex(
+          dot => dot.x === newPos.x && dot.y === newPos.y
+        );
+        
+        if (dotIndex !== -1) {
+          // Usuwanie zebranej kropki
+          room.mazeData.redDots.splice(dotIndex, 1);
+          
+          // Aktualizacja promienia widzenia gracza
+          room.players[socket.id].visionRadius = Math.max(
+            newPos.visionRadius * 0.8, 
+            2
+          );
+          
+          // Powiadomienie wszystkich graczy o aktualizacji
+          io.to(roomId).emit("redDotCollected", {
+            playerId: socket.id,
+            remainingDots: room.mazeData.redDots.length,
+            visionRadius: room.players[socket.id].visionRadius
+          });
+        }
       }
+
+      socket.to(roomId).emit("update", {
+        id: socket.id,
+        pos: newPos,
+      });
     });
 
     socket.on("playerReady", () => {
@@ -135,12 +184,12 @@ socket.emit("init", {
           id: socket.id,
           pos: room.players[socket.id],
         });
-      }
 
-      if (!room.gameStarted && shouldAutoStart(room)) {
-        room.gameStarted = true;
-        const serverStart = Date.now() + 3000;
-        io.to(roomId).emit("startGame", { serverStart });
+        if (!room.gameStarted && shouldAutoStart(room)) {
+          room.gameStarted = true;
+          const serverStart = Date.now() + 3000;
+          io.to(roomId).emit("startGame", { serverStart });
+        }
       }
     });
 
@@ -155,13 +204,11 @@ socket.emit("init", {
       if (!room.players[socket.id]) return;
     
       room.players[socket.id].finishTime = time;
-    
       io.to(roomId).emit("update", {
         id: socket.id,
         pos: room.players[socket.id],
       });
     
-      // ✅ Zlicz punkty gdy wszyscy skończyli
       const allFinished = Object.values(room.players).every((p) => p.finishTime != null);
     
       if (allFinished) {
@@ -172,7 +219,6 @@ socket.emit("init", {
             .sort(([, a], [, b]) => a.finishTime - b.finishTime);
         
           placements.forEach(([id], index) => {
-            // dla points – dodaj punkty
             if (scoringType === "points") {
               let points = 0;
               if (index === 0) points = room.settings.points1 ?? 10;
@@ -181,7 +227,6 @@ socket.emit("init", {
               room.players[id].points = (room.players[id].points || 0) + points;
             }
         
-            // dla placements – dodaj medal
             if (scoringType === "placements") {
               const medals = room.players[id].medals || { gold: 0, silver: 0, bronze: 0 };
               if (index === 0) medals.gold++;
@@ -191,16 +236,12 @@ socket.emit("init", {
             }
           });
         
-          // Emituj aktualizację punktów lub medali
           io.to(roomId).emit("pointsUpdated", {
             players: room.players,
           });
         }
-        
-        
       }
     });
-    
 
     socket.on("getServerTime", (cb) => {
       cb({ now: Date.now() });
@@ -209,7 +250,11 @@ socket.emit("init", {
     socket.on("changeSettings", (newSettings) => {
       if (socket.id !== room.ownerId) return;
 
-      room.settings = { ...room.settings, ...newSettings };
+      room.settings = { 
+        ...room.settings, 
+        ...newSettings,
+        redDotsCount: Math.min(15, Math.max(0, newSettings.redDotsCount || 5))
+      };
       io.to(roomId).emit("settingsUpdated", room.settings);
     });
 
@@ -235,62 +280,56 @@ socket.emit("init", {
       if (usedColors.includes(newColor.toLowerCase())) return;
     
       room.players[socket.id].color = newColor;
-    
       io.to(socket.roomId).emit("update", {
         id: socket.id,
         pos: room.players[socket.id],
       });
     });
-    
 
-socket.on("chatMessage", ({ roomId, nick, message }) => {
-  const resolvedRoomId = roomId || socket.roomId;
-  const room = rooms[resolvedRoomId];
+    socket.on("chatMessage", ({ roomId, nick, message }) => {
+      const resolvedRoomId = roomId || socket.roomId;
+      const room = rooms[resolvedRoomId];
+      if (!room || room.settings.chatEnabled === false) return;
 
-  if (!room || room.settings.chatEnabled === false) return;
-
-
-  io.to(resolvedRoomId).emit("chatMessage", {
-    id: socket.id,
-    nick,
-    message,
-    timestamp: Date.now(),
-  });
-});
-
-
+      io.to(resolvedRoomId).emit("chatMessage", {
+        id: socket.id,
+        nick,
+        message,
+        timestamp: Date.now(),
+      });
+    });
 
     socket.on("newGame", () => {
       if (room.ownerId !== socket.id) return;
 
-      const { difficulty } = room.settings;
+      const { difficulty, redDotsCount = 5 } = room.settings;
       const { rows, cols } = getMazeSize(difficulty);
-      const mazeData = generateMaze(rows, cols);
+      const mazeData = generateMazeWithRedDots(rows, cols, redDotsCount);
       room.mazeData = mazeData;
       room.gameStarted = false;
-
-      const { maze, startX, startY, finishX, finishY } = mazeData;
 
       for (const id in room.players) {
         room.players[id] = {
           ...room.players[id],
-          x: startX,
-          y: startY,
+          x: mazeData.startX,
+          y: mazeData.startY,
           isReady: false,
           finishTime: null,
+          visionRadius: 15,
         };
       }
 
-io.to(roomId).emit("init", {
-  id: socket.id,
-  players: room.players,
-  maze,
-  startX,
-  startY,
-  finishX,
-  finishY,
-  settings: room.settings, // ✅ DODAJ TO!
-});
+      io.to(roomId).emit("init", {
+        id: socket.id,
+        players: room.players,
+        maze: mazeData.maze,
+        startX: mazeData.startX,
+        startY: mazeData.startY,
+        finishX: mazeData.finishX,
+        finishY: mazeData.finishY,
+        redDots: mazeData.redDots,
+        settings: room.settings,
+      });
     });
 
     socket.on("leaveRoom", () => {
