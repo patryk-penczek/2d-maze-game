@@ -6,9 +6,7 @@ import { useState } from 'react';
 
 export default function Home() {
   const router = useRouter();
-  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>(
-    'easy'
-  );
+  const [difficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
   const [name, setName] = useState('');
   const [roomId, setRoomId] = useState('');
 
