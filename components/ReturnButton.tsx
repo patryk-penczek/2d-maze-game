@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   AlertDialog,
@@ -9,12 +9,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { DoorOpenIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
-import type { Socket } from "socket.io";
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { DoorOpenIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import type { Socket } from 'socket.io';
 
 type ReturnButtonProps = {
   socket?: Socket;
@@ -25,10 +25,10 @@ export const ReturnButton = ({ socket }: ReturnButtonProps) => {
 
   const handleLeave = () => {
     if (socket) {
-      socket.emit("leaveRoom");
+      socket.emit('leaveRoom');
       socket.disconnect();
     }
-    router.push("/");
+    router.push('/');
   };
 
   return (
@@ -36,7 +36,7 @@ export const ReturnButton = ({ socket }: ReturnButtonProps) => {
       <AlertDialogTrigger asChild>
         <Button
           variant="destructive"
-          className="absolute left-4 top-4 z-10 font-medium cursor-pointer"
+          className="absolute right-70 top-4 z-10 font-medium cursor-pointer"
         >
           <DoorOpenIcon className="size-4.5" />
           Leave
@@ -66,7 +66,7 @@ export const ReturnButtonSP = () => {
   const router = useRouter();
 
   const handleLeave = () => {
-    router.push("/");
+    router.push('/');
   };
 
   return (

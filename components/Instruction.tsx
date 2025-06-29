@@ -2,10 +2,10 @@ import {
   Drawer,
   DrawerContent,
   DrawerTitle,
-  DrawerTrigger
-} from "@/components/ui/drawer";
-import { InfoIcon } from "lucide-react";
-import { Button } from "./ui/button";
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+import { InfoIcon } from 'lucide-react';
+import { Button } from './ui/button';
 
 export const Instruction = () => {
   return (
@@ -13,7 +13,7 @@ export const Instruction = () => {
       <DrawerTrigger asChild>
         <Button
           variant="outline"
-          className="fixed right-34 top-4 z-10 font-medium cursor-pointer gap-2 px-3 py-2"
+          className="fixed right-4 top-4 z-10 font-medium cursor-pointer gap-2 px-3 py-2"
         >
           <InfoIcon className="size-4.5" />
           Instructions

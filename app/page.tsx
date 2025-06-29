@@ -1,16 +1,14 @@
-"use client";
+'use client';
 
-import Head from "next/head";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import Head from 'next/head';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function Home() {
   const router = useRouter();
-  const [difficulty, setDifficulty] = useState<"easy" | "medium" | "hard">(
-    "easy"
-  );
-  const [name, setName] = useState("");
-  const [roomId, setRoomId] = useState("");
+  const [difficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
+  const [name, setName] = useState('');
+  const [roomId, setRoomId] = useState('');
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -30,31 +28,18 @@ export default function Home() {
           <h1 className="text-5xl font-bold text-center">2D Maze Game</h1>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-y-4">
-            <div className="flex items-center gap-x-4">
-              <input
-                type="text"
-                placeholder="Your name"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-black bg-white"
-              />
-              <select
-                value={difficulty}
-                onChange={e =>
-                  setDifficulty(e.target.value as "easy" | "medium" | "hard")
-                }
-                className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-black bg-white"
-              >
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-              </select>
-            </div>
+            <input
+              type="text"
+              placeholder="Your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-black bg-white"
+            />
             <input
               type="text"
               placeholder="Enter Room ID (optional)"
               value={roomId}
-              onChange={e => setRoomId(e.target.value)}
+              onChange={(e) => setRoomId(e.target.value)}
               className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-black bg-white"
             />
 
