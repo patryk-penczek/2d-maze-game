@@ -10,7 +10,7 @@ import { Ranking } from "@/components/Ranking";
 
 const useSocket = () => {
   const socketRef = useRef(null);
-  
+
   const socketUrls = {
     localhost: `http://${window.location.hostname}:3001`,
     render: 'https://twod-maze-game.onrender.com',
@@ -44,7 +44,7 @@ export const Maze = () => {
   const [mazeData, setMazeData] = useState(null);
   const [players, setPlayers] = useState({});
   const [myId, setMyId] = useState(null);
-  
+
   const [elapsedTime, setElapsedTime] = useState(0);
   const [startTime, setStartTime] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
@@ -55,34 +55,34 @@ export const Maze = () => {
 
   const size = 15;
 
-useEffect(() => {
-  if (typeof window === "undefined") return;
-  const params = new URLSearchParams(window.location.search);
-  const playerName =
-    params.get("name") || `Player${Math.floor(Math.random() * 1000)}`;
-  const room = params.get("room") || "default";
-  setRoomId(room);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const playerName =
+      params.get("name") || `Player${Math.floor(Math.random() * 1000)}`;
+    const room = params.get("room") || "default";
+    setRoomId(room);
 
-  const difficulty = params.get("difficulty") || "easy";
-  socket.emit("joinRoom", { roomId: room, name: playerName, difficulty });
-}, []);
+    const difficulty = params.get("difficulty") || "easy";
+    socket.emit("joinRoom", { roomId: room, name: playerName, difficulty });
+  }, []);
 
 
   useEffect(() => {
-socket.on("init", ({ id, players, maze, startX, startY, finishX, finishY, settings }) => {
-  setMyId(id);
-  setPlayers(players);
-  setMazeData(maze ? { maze, startX, startY, finishX, finishY } : null);
-  setGameStarted(false);
-  setRoomSettings(settings || {});
-  setStartTime(null);
-  setElapsedTime(0);
-  elapsedTimeRef.current = 0;
-  setRestartCountdown(null);
-  setMaxRoundTime(settings?.maxRoundTime ?? 120);
-  setRestartDelay(settings?.restartDelay ?? 15);
-  
-});
+    socket.on("init", ({ id, players, maze, startX, startY, finishX, finishY, settings }) => {
+      setMyId(id);
+      setPlayers(players);
+      setMazeData(maze ? { maze, startX, startY, finishX, finishY } : null);
+      setGameStarted(false);
+      setRoomSettings(settings || {});
+      setStartTime(null);
+      setElapsedTime(0);
+      elapsedTimeRef.current = 0;
+      setRestartCountdown(null);
+      setMaxRoundTime(settings?.maxRoundTime ?? 120);
+      setRestartDelay(settings?.restartDelay ?? 15);
+
+    });
 
 
     socket.on("newPlayer", ({ id, pos }) => {
@@ -108,8 +108,8 @@ socket.on("init", ({ id, players, maze, startX, startY, finishX, finishY, settin
       }));
     });
 
-  
-    
+
+
 
     return () => {
       socket.off("init");
@@ -144,8 +144,8 @@ socket.on("init", ({ id, players, maze, startX, startY, finishX, finishY, settin
         return newPlayers;
       });
     });
-    
-  
+
+
     return () => {
       socket.off("pointsUpdated");
     };
@@ -159,10 +159,10 @@ socket.on("init", ({ id, players, maze, startX, startY, finishX, finishY, settin
       setElapsedTime(elapsed);
       elapsedTimeRef.current = elapsed;
 
-          if (elapsed >= maxRoundTime){
-      setGameStarted(false);
-      setStartTime(null);
-    }
+      if (elapsed >= maxRoundTime) {
+        setGameStarted(false);
+        setStartTime(null);
+      }
     }, 10);
 
 
@@ -181,33 +181,40 @@ socket.on("init", ({ id, players, maze, startX, startY, finishX, finishY, settin
   }, [startTime]);
 
   useEffect(() => {
-    if (!gameStarted || !startTime) return;
-    if (Object.values(players).length === 0) return;
+  if (!gameStarted || !startTime) return;
+  if (Object.values(players).length === 0) return;
 
-    const allFinished = Object.values(players).every(
-      (player) => player.finishTime != null
-    );
+  const allFinished = Object.values(players).every(
+    (player) => player.finishTime != null
+  );
 
-if (allFinished && restartCountdown == null) {
-  const delay = roomSettings?.restartDelay ?? 15;
-  let countdown = delay;
-  setRestartCountdown(countdown);
-
-  const countdownInterval = setInterval(() => {
-    countdown--;
-    setRestartCountdown(countdown);
-    if (countdown <= 0) {
-      clearInterval(countdownInterval);
-      setRestartCountdown(null);
-      setGameStarted(false);
-      setStartTime(null);
-      if (roomSettings?.autoRestart !== false && players[myId]?.isOwner) {
-        socket.emit("newGame");
-      }
+  if (allFinished) {
+    setGameStarted(false);
+    setStartTime(null);
+    if (roomSettings?.autoRestart !== false && players[myId]?.isOwner) {
+      socket.emit('newGame');
     }
-  }, 1000);
-}
-  }, [players, gameStarted, startTime]);
+    elapsedTimeRef.current = Math.max(...Object.values(players).map(p => p.finishTime || 0));
+    setElapsedTime(elapsedTimeRef.current);
+
+      if (restartCountdown == null) {
+        let countdown = restartDelay;
+        setRestartCountdown(countdown);
+
+        const interval = setInterval(() => {
+          countdown--;
+          setRestartCountdown(countdown);
+          if (countdown <= 0) {
+            clearInterval(interval);
+            setRestartCountdown(null);
+          }
+        }, 1000);
+      }
+    
+  }
+}, [players, gameStarted, startTime]);
+
+  
 
   useEffect(() => {
     if (!mazeData || !mazeData.maze) return;
@@ -265,23 +272,23 @@ if (allFinished && restartCountdown == null) {
     }
   };
   useEffect(() => {
-  socket.on("settingsUpdated", (settings) => {
-    setRoomSettings(settings || {});
-    if (settings.maxRoundTime != null) {
-  setMaxRoundTime(settings.maxRoundTime);
-}
-    if (settings.restartDelay != null) {
-      setRestartDelay(settings.restartDelay);
-    }
-    
-  });
+    socket.on("settingsUpdated", (settings) => {
+      setRoomSettings(settings || {});
+      if (settings.maxRoundTime != null) {
+        setMaxRoundTime(settings.maxRoundTime);
+      }
+      if (settings.restartDelay != null) {
+        setRestartDelay(settings.restartDelay);
+      }
 
-  
+    });
 
-  return () => {
-    socket.off("settingsUpdated");
-  };
-}, []);
+
+
+    return () => {
+      socket.off("settingsUpdated");
+    };
+  }, []);
 
 
   useEffect(() => {
@@ -365,9 +372,9 @@ if (allFinished && restartCountdown == null) {
         }
       }
     }
-      const { finishX, finishY } = mazeData;
-      ctx.fillStyle = '#FFD700'; 
-      ctx.fillRect(
+    const { finishX, finishY } = mazeData;
+    ctx.fillStyle = '#FFD700';
+    ctx.fillRect(
       finishY * size + size / 4,
       finishX * size + size / 4,
       size / 2,
@@ -405,25 +412,31 @@ if (allFinished && restartCountdown == null) {
   }, [players, imagesLoaded, mazeData, elapsedTime]);
 
   return (
-    
+
     <div className="relative w-dvw h-dvh text-white overflow-hidden">
       <ReturnButton socket={socket} />
-      <Settings socket={socket} isOwner={players[myId]?.isOwner} playerColor={players[myId]?.color}/>
-<div className="bg-[#132a13] p-4 rounded-lg shadow-2xl absolute top-10 left-1/2 transform -translate-x-1/2 text-2xl z-50">
-        {elapsedTime < 0
-          ? `Start za ${Math.ceil(-elapsedTime)}s`
-          : `Czas: ${elapsedTime.toFixed(2)}s${restartCountdown != null ? ` (${restartCountdown}s left)` : ""}`}
+      <Settings socket={socket} isOwner={players[myId]?.isOwner} playerColor={players[myId]?.color} />
+      <div className="bg-[#132a13] p-4 rounded-lg shadow-2xl absolute top-10 left-1/2 transform -translate-x-1/2 text-2xl z-50">
+      {elapsedTime < 0
+  ? `Start za ${Math.ceil(-elapsedTime)}s`
+  : `Czas: ${elapsedTime.toFixed(2)}s${(restartCountdown != null && gameStarted) ? ` (${restartCountdown}s left)` : ""}`}
+
       </div>
 
       <div className="absolute top-30 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-4 z-20">
         {players[myId]?.isOwner && (
           <button
-            onClick={() => socket.emit("newGame")}
+            onClick={() => {
+              setRestartCountdown(null);
+              
+              socket.emit("newGame");
+            }}
             className="bg-yellow-500 hover:bg-yellow-600 px-6 py-3 rounded text-white font-semibold"
           >
             ♻️ New Game
           </button>
         )}
+
 
         {players[myId]?.isOwner && mazeData?.maze && !gameStarted && (
           <button
@@ -444,21 +457,23 @@ if (allFinished && restartCountdown == null) {
         )}
       </div>
       {Object.keys(players).length > 0 && (
-  <Ranking players={players} scoringType={roomSettings?.scoringType || "points"} />
-)}
-
-      {mazeData?.maze && elapsedTime >=0 && gameStarted ? (
+        <Ranking players={players} scoringType={roomSettings?.scoringType || "points"} />
+      )}
+      
+{gameStarted || (elapsedTime > 0 && !roomSettings?.autoRestart)
+  ? mazeData?.maze && (
         <canvas
           ref={canvasRef}
           className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white z-0 border-12 border-[#132a13] shadow-xl rounded-md"
         />
       ) : (
-        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-xl text-white z-0">
-          Czekam na rozpoczęcie gry...
-        </div>
-      )}
 
-     
+          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-xl text-white z-0">
+            Czekam na rozpoczęcie gry...
+          </div>
+        )
+      }
+
       <div className="absolute right-4 top-20 bg-white text-black p-4 border-2 border-[#132a13] shadow-xl rounded-md text-sm z-50">
         <h2 className="font-bold mb-2">Gracze</h2>
         <ul className="space-y-1">
@@ -491,13 +506,13 @@ if (allFinished && restartCountdown == null) {
             ))}
         </ul>
       </div>
-            {roomSettings.chatEnabled && (
+      {roomSettings.chatEnabled && (
         <div className="absolute bottom-24 left-4 w-80 z-50">
           <Chat socket={socket}
-    myId={myId}
-    players={players}
-    chatEnabled={roomSettings.chatEnabled}
-  roomId={roomId} />
+            myId={myId}
+            players={players}
+            chatEnabled={roomSettings.chatEnabled}
+            roomId={roomId} />
         </div>
       )}
 
