@@ -43,6 +43,7 @@ export const Maze = () => {
   const [mazeData, setMazeData] = useState(null);
   const [players, setPlayers] = useState({});
   const [myId, setMyId] = useState(null);
+  
   const [elapsedTime, setElapsedTime] = useState(0);
   const [startTime, setStartTime] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
@@ -81,7 +82,7 @@ export const Maze = () => {
         setRestartDelay(settings?.restartDelay ?? 15);
       }
     );
-
+    
     socket.on('newPlayer', ({ id, pos }) => {
       setPlayers((prev) => ({ ...prev, [id]: pos }));
     });
@@ -353,7 +354,14 @@ export const Maze = () => {
         }
       }
     }
-
+      const { finishX, finishY } = mazeData;
+      ctx.fillStyle = '#FFD700'; 
+      ctx.fillRect(
+      finishY * size + size / 4,
+      finishX * size + size / 4,
+      size / 2,
+      size / 2
+    );
     let positionMap = {};
 
     Object.entries(players).forEach(([id, { x, y }]) => {
