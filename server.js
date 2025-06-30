@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const express = require("express");
 const http = require("http");
 const cors = require("cors");
@@ -12,9 +13,22 @@ const io = new Server(server, {
 });
 
 const COLORS = [
-  "#3498db", "#9b59b6", "#e67e22", "#f1c40f", "#1abc9c", "#8e44ad", "#2980b9",
-  "#e91e63", "#00cec9", "#6c5ce7", "#fdcb6e", "#0984e3", "#a29bfe", "#fab1a0",
-  "#ffeaa7", "#81ecec"
+  "#3498db",
+  "#9b59b6",
+  "#e67e22",
+  "#f1c40f",
+  "#1abc9c",
+  "#8e44ad",
+  "#2980b9",
+  "#e91e63",
+  "#00cec9",
+  "#6c5ce7",
+  "#fdcb6e",
+  "#0984e3",
+  "#a29bfe",
+  "#fab1a0",
+  "#ffeaa7",
+  "#81ecec",
 ];
 let colorIndex = 0;
 
@@ -22,10 +36,14 @@ const rooms = {};
 
 function getMazeSize(difficulty) {
   switch (difficulty) {
-    case "medium": return { rows: 45, cols: 45 };
-    case "hard": return { rows: 61, cols: 61 };
-    case "extreme": return { rows: 81, cols: 81 };
-    default: return { rows: 31, cols: 31 };
+    case "medium":
+      return { rows: 45, cols: 45 };
+    case "hard":
+      return { rows: 61, cols: 61 };
+    case "extreme":
+      return { rows: 81, cols: 81 };
+    default:
+      return { rows: 31, cols: 31 };
   }
 }
 
@@ -34,14 +52,12 @@ function shouldAutoStart(room) {
   const readyCount = players.filter((p) => p.isReady).length;
   const thresholdRaw = room.settings.autoStartThreshold;
 
-  // Obsługa wartości procentowych np. "75%"
   if (typeof thresholdRaw === "string" && thresholdRaw.endsWith("%")) {
     const percent = parseInt(thresholdRaw.replace("%", ""));
     const required = Math.ceil((percent / 100) * players.length);
     return readyCount >= required;
   }
 
-  // Obsługa wartości liczbowych jako string lub number
   const threshold = parseInt(thresholdRaw, 10);
   if (!isNaN(threshold)) {
     return readyCount >= threshold;
@@ -50,37 +66,35 @@ function shouldAutoStart(room) {
   return false;
 }
 
-
 io.on("connection", (socket) => {
-  
   socket.on("joinRoom", ({ roomId, name, difficulty }) => {
     socket.roomId = roomId;
 
-if (!rooms[roomId]) {
-  rooms[roomId] = {
-    players: {},
-    ownerId: socket.id,
-    gameStarted: false,
-    mazeData: null,
-    settings: {
-      difficulty,
-      restartDelay: 15,
-      maxPlayers: 16,
-      autoStartThreshold: "75%",
-      finishThreshold: "100%",
-      chatEnabled: true,
-      autoRestart: true,
-      scoringType: "points",
-      maxRoundTime: 120,
-    },
-  };
-}
+    if (!rooms[roomId]) {
+      rooms[roomId] = {
+        players: {},
+        ownerId: socket.id,
+        gameStarted: false,
+        mazeData: null,
+        settings: {
+          difficulty,
+          restartDelay: 15,
+          maxPlayers: 16,
+          autoStartThreshold: "75%",
+          finishThreshold: "100%",
+          chatEnabled: true,
+          autoRestart: true,
+          scoringType: "points",
+          maxRoundTime: 120,
+        },
+      };
+    }
 
     const room = rooms[roomId];
     if (room && Object.keys(room.players).length >= room.settings.maxPlayers) {
-  socket.emit("roomFull", { message: "Room is full" });
-  return;
-}
+      socket.emit("roomFull", { message: "Room is full" });
+      return;
+    }
     const color = COLORS[colorIndex % COLORS.length];
     colorIndex++;
 
@@ -104,17 +118,21 @@ if (!rooms[roomId]) {
     const finishX = room.mazeData?.finishX ?? 0;
     const finishY = room.mazeData?.finishY ?? 0;
 
-socket.emit("init", {
-  id: socket.id,
-  players: room.players,
-  maze,
-  startX,
-  startY,
-  finishX,
-  finishY,
-  settings: room.settings, // 👈 TO JEST KLUCZOWE!
-});
-
+    for (const id in room.players) {
+      const playerSocket = io.sockets.sockets.get(id);
+      if (playerSocket) {
+        playerSocket.emit("init", {
+          id,
+          players: room.players,
+          maze,
+          startX,
+          startY,
+          finishX,
+          finishY,
+          settings: room.settings,
+        });
+      }
+    }
 
     socket.to(roomId).emit("newPlayer", { id: socket.id, pos: playerData });
 
@@ -153,26 +171,32 @@ socket.emit("init", {
 
     socket.on("playerFinished", ({ time }) => {
       if (!room.players[socket.id]) return;
-    
+
       room.players[socket.id].finishTime = time;
-    
+
       io.to(roomId).emit("update", {
         id: socket.id,
         pos: room.players[socket.id],
       });
-    
-      // ✅ Zlicz punkty gdy wszyscy skończyli
-      const allFinished = Object.values(room.players).every((p) => p.finishTime != null);
-    
+
+      const allFinished = Object.values(room.players).every(
+        (p) => p.finishTime != null
+      );
+
       if (allFinished) {
-        const { scoringType, points1 = 10, points2 = 7, points3 = 5 } = room.settings;
-    
+        const {
+          scoringType,
+          points1 = 10,
+          points2 = 7,
+          points3 = 5,
+        } = room.settings;
+
         if (scoringType === "points" || scoringType === "placements") {
-          const placements = Object.entries(room.players)
-            .sort(([, a], [, b]) => a.finishTime - b.finishTime);
-        
+          const placements = Object.entries(room.players).sort(
+            ([, a], [, b]) => a.finishTime - b.finishTime
+          );
+
           placements.forEach(([id], index) => {
-            // dla points – dodaj punkty
             if (scoringType === "points") {
               let points = 0;
               if (index === 0) points = room.settings.points1 ?? 10;
@@ -180,27 +204,26 @@ socket.emit("init", {
               else if (index === 2) points = room.settings.points3 ?? 5;
               room.players[id].points = (room.players[id].points || 0) + points;
             }
-        
-            // dla placements – dodaj medal
+
             if (scoringType === "placements") {
-              const medals = room.players[id].medals || { gold: 0, silver: 0, bronze: 0 };
+              const medals = room.players[id].medals || {
+                gold: 0,
+                silver: 0,
+                bronze: 0,
+              };
               if (index === 0) medals.gold++;
               else if (index === 1) medals.silver++;
               else if (index === 2) medals.bronze++;
               room.players[id].medals = medals;
             }
           });
-        
-          // Emituj aktualizację punktów lub medali
+
           io.to(roomId).emit("pointsUpdated", {
             players: room.players,
           });
         }
-        
-        
       }
     });
-    
 
     socket.on("getServerTime", (cb) => {
       cb({ now: Date.now() });
@@ -227,38 +250,34 @@ socket.emit("init", {
     socket.on("changeColor", (newColor) => {
       const room = rooms[socket.roomId];
       if (!room || !room.players[socket.id]) return;
-    
+
       const usedColors = Object.values(room.players)
-        .filter(p => p.color && p.color !== room.players[socket.id].color)
-        .map(p => p.color.toLowerCase());
-    
+        .filter((p) => p.color && p.color !== room.players[socket.id].color)
+        .map((p) => p.color.toLowerCase());
+
       if (usedColors.includes(newColor.toLowerCase())) return;
-    
+
       room.players[socket.id].color = newColor;
-    
+
       io.to(socket.roomId).emit("update", {
         id: socket.id,
         pos: room.players[socket.id],
       });
     });
-    
 
-socket.on("chatMessage", ({ roomId, nick, message }) => {
-  const resolvedRoomId = roomId || socket.roomId;
-  const room = rooms[resolvedRoomId];
+    socket.on("chatMessage", ({ roomId, nick, message }) => {
+      const resolvedRoomId = roomId || socket.roomId;
+      const room = rooms[resolvedRoomId];
 
-  if (!room || room.settings.chatEnabled === false) return;
+      if (!room || room.settings.chatEnabled === false) return;
 
-
-  io.to(resolvedRoomId).emit("chatMessage", {
-    id: socket.id,
-    nick,
-    message,
-    timestamp: Date.now(),
-  });
-});
-
-
+      io.to(resolvedRoomId).emit("chatMessage", {
+        id: socket.id,
+        nick,
+        message,
+        timestamp: Date.now(),
+      });
+    });
 
     socket.on("newGame", () => {
       if (room.ownerId !== socket.id) return;
@@ -281,16 +300,21 @@ socket.on("chatMessage", ({ roomId, nick, message }) => {
         };
       }
 
-io.to(roomId).emit("init", {
-  id: socket.id,
-  players: room.players,
-  maze,
-  startX,
-  startY,
-  finishX,
-  finishY,
-  settings: room.settings, // ✅ DODAJ TO!
-});
+      for (const id in room.players) {
+        const playerSocket = io.sockets.sockets.get(id);
+        if (playerSocket) {
+          playerSocket.emit("init", {
+            id,
+            players: room.players,
+            maze,
+            startX,
+            startY,
+            finishX,
+            finishY,
+            settings: room.settings,
+          });
+        }
+      }
     });
 
     socket.on("leaveRoom", () => {
