@@ -10,6 +10,7 @@ import { io } from 'socket.io-client';
 
 const useSocket = () => {
   return useMemo(() => {
+    if (typeof window === 'undefined') return null;
     const socketUrls = {
       localhost: `http://${window.location.hostname}:3001`,
       render: 'https://twod-maze-game.onrender.com',
@@ -24,6 +25,7 @@ const useSocket = () => {
 
 export const Maze = () => {
   const socket = useSocket();
+  if (!socket) return null;
   const router = useRouter();
   const canvasRef = useRef(null);
   const wallImgRef = useRef(null);
