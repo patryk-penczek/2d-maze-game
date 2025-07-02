@@ -506,9 +506,9 @@ export const Maze = () => {
             height: '75dvh',
             transform: 'translate(-50%, -50%)',
             overflow: 'hidden',
-            background: '#fff',
-            borderRadius: '1rem',
-            boxShadow: '0 4px 32px #0002',
+            background: '#f8fafc',
+            boxShadow: '0 6px 36px #0003',
+            border: '3px solid #222',
           }}
         >
           <canvas
