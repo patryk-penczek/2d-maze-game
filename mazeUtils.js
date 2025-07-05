@@ -137,6 +137,21 @@ function generateMaze(rows, cols) {
       startY: centerCol
     };
   }
-  
-  module.exports = { generateMaze };
-  
+  function createRandomHoles(maze, count) {
+  const rows = maze.length;
+  const cols = maze[0].length;
+
+  let added = 0;
+  while (added < count) {
+    const x = Math.floor(Math.random() * rows);
+    const y = Math.floor(Math.random() * cols);
+
+    if (maze[x][y] === 1 && x > 0 && x < rows - 1 && y > 0 && y < cols - 1) {
+      maze[x][y] = 0;
+      added++;
+    }
+  }
+  return maze;
+}
+
+module.exports = { generateMaze, createRandomHoles }; 

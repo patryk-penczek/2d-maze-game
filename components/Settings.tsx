@@ -41,6 +41,9 @@ export function Settings({
   const [points2, setPoints2] = useState(7);
   const [points3, setPoints3] = useState(5);
   const [lobbyOpen, setLobbyOpen] = useState(isOwner);
+  const [vanishingWalls, setVanishingWalls] = useState(true);
+  const [holesPerInterval, setHolesPerInterval] = useState(3);
+  const [holesInterval, setHolesInterval] = useState(5);
 
   useEffect(() => {
     if (!socket) return;
@@ -58,6 +61,9 @@ export function Settings({
       points1?: number;
       points2?: number;
       points3?: number;
+      vanishingWalls?: boolean;
+      holesPerInterval?: number;
+      holesInterval?: number;
     }
 
     socket.on('settingsUpdated', (settings: Settings) => {
@@ -71,6 +77,12 @@ export function Settings({
       if (settings.points1 != null) setPoints1(settings.points1);
       if (settings.points2 != null) setPoints2(settings.points2);
       if (settings.points3 != null) setPoints3(settings.points3);
+      if (settings.vanishingWalls != null)
+        setVanishingWalls(settings.vanishingWalls);
+      if (settings.holesPerInterval != null)
+        setHolesPerInterval(settings.holesPerInterval);
+      if (settings.holesInterval != null)
+        setHolesInterval(settings.holesInterval);
       if (settings.autoStartThreshold != null)
         setAutoStartThreshold(String(settings.autoStartThreshold));
       if (settings.finishThreshold != null)
@@ -120,6 +132,9 @@ export function Settings({
         points3,
         autoStartThreshold,
         finishThreshold,
+        vanishingWalls,
+        holesPerInterval,
+        holesInterval,
       });
     }
 
@@ -375,6 +390,62 @@ export function Settings({
                     disabled={!isOwner}
                   />
                   <label className="text-sm font-medium">Enable Chat</label>
+                </div>
+
+                <div className="border-t border-white/20 pt-4 mt-4">
+                  <h4 className="font-semibold text-base mb-3">
+                    Vanishing Walls
+                  </h4>
+
+                  <div className="flex items-center gap-2 mb-3">
+                    <input
+                      type="checkbox"
+                      checked={vanishingWalls}
+                      onChange={(e) => setVanishingWalls(e.target.checked)}
+                      disabled={!isOwner}
+                    />
+                    <label className="text-sm font-medium">
+                      Enable Vanishing Walls
+                    </label>
+                  </div>
+
+                  {vanishingWalls && (
+                    <>
+                      <div className="mb-3">
+                        <label className="text-sm block mb-2 font-medium">
+                          Holes per interval
+                        </label>
+                        <input
+                          type="number"
+                          value={holesPerInterval}
+                          min={1}
+                          max={20}
+                          onChange={(e) =>
+                            setHolesPerInterval(Number(e.target.value))
+                          }
+                          disabled={!isOwner}
+                          className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
+                        />
+                      </div>
+
+                      <div className="mb-3">
+                        <label className="text-sm block mb-2 font-medium">
+                          Interval (seconds)
+                        </label>
+                        <input
+                          type="number"
+                          value={holesInterval}
+                          min={1}
+                          max={60}
+                          onChange={(e) =>
+                            setHolesInterval(Number(e.target.value))
+                          }
+                          disabled={!isOwner}
+                          className="w-full p-2 rounded bg-white text-black border border-gray-400 disabled:opacity-50"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}

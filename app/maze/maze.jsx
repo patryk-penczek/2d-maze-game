@@ -77,6 +77,18 @@ export const Maze = () => {
       }
     );
 
+    socket.on('updateMaze', ({ maze }) => {
+      const newMaze = maze.map((row) => [...row]);
+
+      setMazeData((prevMazeData) => {
+        if (!prevMazeData) return null;
+        return {
+          ...prevMazeData,
+          maze: newMaze,
+        };
+      });
+    });
+
     socket.on('newPlayer', ({ id, pos }) => {
       setPlayers((prev) => ({ ...prev, [id]: pos }));
     });
@@ -102,6 +114,7 @@ export const Maze = () => {
 
     return () => {
       socket.off('init');
+      socket.off('updateMaze');
       socket.off('newPlayer');
       socket.off('update');
       socket.off('removePlayer');
@@ -440,7 +453,6 @@ export const Maze = () => {
         </div>
       </div>
 
-      {/* Kontener na przyciski w centrum ekranu, z ładnym designem */}
       {!gameStarted &&
         (() => {
           const showNewGame = players[myId]?.isOwner;
@@ -488,7 +500,6 @@ export const Maze = () => {
             </div>
           );
         })()}
-      {/* Odliczanie na środku ekranu */}
       {countdown > 0 && (
         <div className="fixed inset-0 flex items-center justify-center z-[100] bg-black/70">
           <div className="w-64 h-64 flex items-center justify-center bg-[#1e4023] rounded-2xl shadow-2xl border-4 border-[#31572c] animate-in fade-in zoom-in-50">
