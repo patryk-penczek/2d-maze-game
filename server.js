@@ -1,34 +1,35 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-const express = require("express");
-const http = require("http");
-const cors = require("cors");
-const { Server } = require("socket.io");
-const { generateMaze } = require("./mazeUtils");
+const express = require('express');
+const http = require('http');
+const cors = require('cors');
+const { Server } = require('socket.io');
+const { generateMaze } = require('./mazeUtils');
+const { createRandomHoles } = require('./mazeUtils');
 
 const app = express();
 app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "*" },
+  cors: { origin: '*' },
 });
 
 const COLORS = [
-  "#3498db",
-  "#9b59b6",
-  "#e67e22",
-  "#f1c40f",
-  "#1abc9c",
-  "#8e44ad",
-  "#2980b9",
-  "#e91e63",
-  "#00cec9",
-  "#6c5ce7",
-  "#fdcb6e",
-  "#0984e3",
-  "#a29bfe",
-  "#fab1a0",
-  "#ffeaa7",
-  "#81ecec",
+  '#3498db',
+  '#9b59b6',
+  '#e67e22',
+  '#f1c40f',
+  '#1abc9c',
+  '#8e44ad',
+  '#2980b9',
+  '#e91e63',
+  '#00cec9',
+  '#6c5ce7',
+  '#fdcb6e',
+  '#0984e3',
+  '#a29bfe',
+  '#fab1a0',
+  '#ffeaa7',
+  '#81ecec',
 ];
 let colorIndex = 0;
 
@@ -36,11 +37,11 @@ const rooms = {};
 
 function getMazeSize(difficulty) {
   switch (difficulty) {
-    case "medium":
+    case 'medium':
       return { rows: 45, cols: 45 };
-    case "hard":
+    case 'hard':
       return { rows: 61, cols: 61 };
-    case "extreme":
+    case 'extreme':
       return { rows: 81, cols: 81 };
     default:
       return { rows: 31, cols: 31 };
@@ -52,8 +53,8 @@ function shouldAutoStart(room) {
   const readyCount = players.filter((p) => p.isReady).length;
   const thresholdRaw = room.settings.autoStartThreshold;
 
-  if (typeof thresholdRaw === "string" && thresholdRaw.endsWith("%")) {
-    const percent = parseInt(thresholdRaw.replace("%", ""));
+  if (typeof thresholdRaw === 'string' && thresholdRaw.endsWith('%')) {
+    const percent = parseInt(thresholdRaw.replace('%', ''));
     const required = Math.ceil((percent / 100) * players.length);
     return readyCount >= required;
   }
@@ -66,8 +67,8 @@ function shouldAutoStart(room) {
   return false;
 }
 
-io.on("connection", (socket) => {
-  socket.on("joinRoom", ({ roomId, name, difficulty }) => {
+io.on('connection', (socket) => {
+  socket.on('joinRoom', ({ roomId, name, difficulty }) => {
     socket.roomId = roomId;
 
     if (!rooms[roomId]) {
@@ -80,19 +81,22 @@ io.on("connection", (socket) => {
           difficulty,
           restartDelay: 15,
           maxPlayers: 16,
-          autoStartThreshold: "75%",
-          finishThreshold: "100%",
+          autoStartThreshold: '75%',
+          finishThreshold: '100%',
           chatEnabled: true,
           autoRestart: true,
-          scoringType: "points",
+          scoringType: 'points',
           maxRoundTime: 120,
+          vanishingWalls: true,
+          holesPerInterval: 3,
+          holesInterval: 5,
         },
       };
     }
 
     const room = rooms[roomId];
     if (room && Object.keys(room.players).length >= room.settings.maxPlayers) {
-      socket.emit("roomFull", { message: "Room is full" });
+      socket.emit('roomFull', { message: 'Room is full' });
       return;
     }
     const color = COLORS[colorIndex % COLORS.length];
@@ -106,7 +110,7 @@ io.on("connection", (socket) => {
       isOwner: socket.id === room.ownerId,
       isReady: false,
       finishTime: null,
-      movement: "arrows",
+      movement: 'arrows',
     };
 
     room.players[socket.id] = playerData;
@@ -121,7 +125,7 @@ io.on("connection", (socket) => {
     for (const id in room.players) {
       const playerSocket = io.sockets.sockets.get(id);
       if (playerSocket) {
-        playerSocket.emit("init", {
+        playerSocket.emit('init', {
           id,
           players: room.players,
           maze,
@@ -134,22 +138,22 @@ io.on("connection", (socket) => {
       }
     }
 
-    socket.to(roomId).emit("newPlayer", { id: socket.id, pos: playerData });
+    socket.to(roomId).emit('newPlayer', { id: socket.id, pos: playerData });
 
-    socket.on("move", (pos) => {
+    socket.on('move', (pos) => {
       if (room.players[socket.id]) {
         room.players[socket.id] = { ...room.players[socket.id], ...pos };
-        socket.to(roomId).emit("update", {
+        socket.to(roomId).emit('update', {
           id: socket.id,
           pos: room.players[socket.id],
         });
       }
     });
 
-    socket.on("playerReady", () => {
+    socket.on('playerReady', () => {
       if (room.players[socket.id]) {
         room.players[socket.id].isReady = true;
-        io.to(roomId).emit("update", {
+        io.to(roomId).emit('update', {
           id: socket.id,
           pos: room.players[socket.id],
         });
@@ -158,23 +162,59 @@ io.on("connection", (socket) => {
       if (!room.gameStarted && shouldAutoStart(room)) {
         room.gameStarted = true;
         const serverStart = Date.now() + 3000;
-        io.to(roomId).emit("startGame", { serverStart });
+        io.to(roomId).emit('startGame', { serverStart });
       }
     });
 
-    socket.on("startGameByOwner", () => {
+    socket.on('startGameByOwner', () => {
       if (room.ownerId !== socket.id || room.gameStarted) return;
       room.gameStarted = true;
       const serverStart = Date.now() + 3000;
-      io.to(roomId).emit("startGame", { serverStart });
+      io.to(roomId).emit('startGame', { serverStart });
+
+      if (room.settings.vanishingWalls) {
+        setTimeout(() => {
+          if (!room.mazeData) return;
+
+          const holesCount = room.settings.holesPerInterval || 3;
+          room.mazeData.maze = createRandomHoles(
+            room.mazeData.maze,
+            holesCount
+          );
+
+          io.to(roomId).emit('updateMaze', {
+            maze: room.mazeData.maze,
+          });
+
+          const intervalTime = (room.settings.holesInterval || 5) * 1000;
+          const holeInterval = setInterval(() => {
+            if (!room.mazeData || !room.gameStarted) {
+              clearInterval(holeInterval);
+              return;
+            }
+
+            const holesCount = room.settings.holesPerInterval || 3;
+            room.mazeData.maze = createRandomHoles(
+              room.mazeData.maze,
+              holesCount
+            );
+
+            io.to(roomId).emit('updateMaze', {
+              maze: room.mazeData.maze,
+            });
+          }, intervalTime);
+
+          room.holeInterval = holeInterval;
+        }, 3000);
+      }
     });
 
-    socket.on("playerFinished", ({ time }) => {
+    socket.on('playerFinished', ({ time }) => {
       if (!room.players[socket.id]) return;
 
       room.players[socket.id].finishTime = time;
 
-      io.to(roomId).emit("update", {
+      io.to(roomId).emit('update', {
         id: socket.id,
         pos: room.players[socket.id],
       });
@@ -184,20 +224,15 @@ io.on("connection", (socket) => {
       );
 
       if (allFinished) {
-        const {
-          scoringType,
-          points1 = 10,
-          points2 = 7,
-          points3 = 5,
-        } = room.settings;
+        const { scoringType } = room.settings;
 
-        if (scoringType === "points" || scoringType === "placements") {
+        if (scoringType === 'points' || scoringType === 'placements') {
           const placements = Object.entries(room.players).sort(
             ([, a], [, b]) => a.finishTime - b.finishTime
           );
 
           placements.forEach(([id], index) => {
-            if (scoringType === "points") {
+            if (scoringType === 'points') {
               let points = 0;
               if (index === 0) points = room.settings.points1 ?? 10;
               else if (index === 1) points = room.settings.points2 ?? 7;
@@ -205,7 +240,7 @@ io.on("connection", (socket) => {
               room.players[id].points = (room.players[id].points || 0) + points;
             }
 
-            if (scoringType === "placements") {
+            if (scoringType === 'placements') {
               const medals = room.players[id].medals || {
                 gold: 0,
                 silver: 0,
@@ -218,36 +253,36 @@ io.on("connection", (socket) => {
             }
           });
 
-          io.to(roomId).emit("pointsUpdated", {
+          io.to(roomId).emit('pointsUpdated', {
             players: room.players,
           });
         }
       }
     });
 
-    socket.on("getServerTime", (cb) => {
+    socket.on('getServerTime', (cb) => {
       cb({ now: Date.now() });
     });
 
-    socket.on("changeSettings", (newSettings) => {
+    socket.on('changeSettings', (newSettings) => {
       if (socket.id !== room.ownerId) return;
 
       room.settings = { ...room.settings, ...newSettings };
-      io.to(roomId).emit("settingsUpdated", room.settings);
+      io.to(roomId).emit('settingsUpdated', room.settings);
     });
 
-    socket.on("changeMovement", (mode) => {
-      if (!["arrows", "wasd"].includes(mode)) return;
+    socket.on('changeMovement', (mode) => {
+      if (!['arrows', 'wasd'].includes(mode)) return;
       if (room.players[socket.id]) {
         room.players[socket.id].movement = mode;
-        socket.emit("movementUpdated", {
+        socket.emit('movementUpdated', {
           id: socket.id,
           movement: mode,
         });
       }
     });
 
-    socket.on("changeColor", (newColor) => {
+    socket.on('changeColor', (newColor) => {
       const room = rooms[socket.roomId];
       if (!room || !room.players[socket.id]) return;
 
@@ -259,19 +294,19 @@ io.on("connection", (socket) => {
 
       room.players[socket.id].color = newColor;
 
-      io.to(socket.roomId).emit("update", {
+      io.to(socket.roomId).emit('update', {
         id: socket.id,
         pos: room.players[socket.id],
       });
     });
 
-    socket.on("chatMessage", ({ roomId, nick, message }) => {
+    socket.on('chatMessage', ({ roomId, nick, message }) => {
       const resolvedRoomId = roomId || socket.roomId;
       const room = rooms[resolvedRoomId];
 
       if (!room || room.settings.chatEnabled === false) return;
 
-      io.to(resolvedRoomId).emit("chatMessage", {
+      io.to(resolvedRoomId).emit('chatMessage', {
         id: socket.id,
         nick,
         message,
@@ -279,8 +314,13 @@ io.on("connection", (socket) => {
       });
     });
 
-    socket.on("newGame", () => {
+    socket.on('newGame', () => {
       if (room.ownerId !== socket.id) return;
+
+      if (room.holeInterval) {
+        clearInterval(room.holeInterval);
+        room.holeInterval = null;
+      }
 
       const { difficulty } = room.settings;
       const { rows, cols } = getMazeSize(difficulty);
@@ -303,7 +343,7 @@ io.on("connection", (socket) => {
       for (const id in room.players) {
         const playerSocket = io.sockets.sockets.get(id);
         if (playerSocket) {
-          playerSocket.emit("init", {
+          playerSocket.emit('init', {
             id,
             players: room.players,
             maze,
@@ -317,11 +357,11 @@ io.on("connection", (socket) => {
       }
     });
 
-    socket.on("leaveRoom", () => {
+    socket.on('leaveRoom', () => {
       handlePlayerLeave(socket, roomId);
     });
 
-    socket.on("disconnect", () => {
+    socket.on('disconnect', () => {
       handlePlayerLeave(socket, roomId);
     });
   });
@@ -331,14 +371,14 @@ io.on("connection", (socket) => {
     if (!room || !room.players[socket.id]) return;
 
     delete room.players[socket.id];
-    io.to(roomId).emit("removePlayer", socket.id);
+    io.to(roomId).emit('removePlayer', socket.id);
 
     if (room.ownerId === socket.id) {
       const nextOwner = Object.keys(room.players)[0];
       room.ownerId = nextOwner;
       if (nextOwner && room.players[nextOwner]) {
         room.players[nextOwner].isOwner = true;
-        io.to(roomId).emit("update", {
+        io.to(roomId).emit('update', {
           id: nextOwner,
           pos: room.players[nextOwner],
         });
@@ -347,6 +387,10 @@ io.on("connection", (socket) => {
 
     if (Object.keys(room.players).length < 2) {
       room.gameStarted = false;
+      if (room.holeInterval) {
+        clearInterval(room.holeInterval);
+        room.holeInterval = null;
+      }
     }
 
     socket.leave(roomId);
@@ -354,5 +398,5 @@ io.on("connection", (socket) => {
 });
 
 server.listen(3001, () => {
-  console.log("✅ Server running on http://localhost:3001");
+  console.log('✅ Server running on http://localhost:3001');
 });
