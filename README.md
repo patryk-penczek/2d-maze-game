@@ -21,18 +21,21 @@
 ## Wymagania wstępne
 
 1. **Node.js** – Upewnij się, że masz zainstalowaną najnowszą wersję **Node.js**. Jeśli nie masz jej zainstalowanej, możesz pobrać ją ze strony [Node.js](https://nodejs.org/).
+   ```bash
+   node server.js
+   ```
 
-2. **npm** – npm (Node Package Manager) jest automatycznie zainstalowane wraz z Node.js. Możesz sprawdzić wersję npm, wpisując w terminalu:
+3. **npm** – npm (Node Package Manager) jest automatycznie zainstalowane wraz z Node.js. Możesz sprawdzić wersję npm, wpisując w terminalu:
    ```bash
    npm -v
    ```
-3. Sklonuj projekt na swój komputer:
+4. Sklonuj projekt na swój komputer:
    ```bash
    git clone
    ```
-4. Zainstaluj projekt:
+5. Zainstaluj projekt:
    ```bash
-   mpm install
+   npm install
    ```
 4. Uruchom grę:
 
@@ -58,11 +61,29 @@
 
 ## Cel gry
 
-Celem gry jest dotarcie do wyjścia z labiryntu jako pierwszy gracz. Gracze muszą przejść przez wszystkie zakamarki labiryntu, unikając przeszkód i znalezienia optymalnej drogi do celu.
+Celem gry jest jak najszybsze odnalezienie i dotarcie do wyjścia z labiryntu. Gracze muszą przejść przez wszystkie jego zakamarki, aby znaleźć optymalną drogę do celu.
 
 ## Tryby gry
 
-- **Tryb rywalizacji** – Gracze rywalizują o to, kto szybciej dotrze do wyjścia.
+- **Tryb rywalizacji** –  Gracze rywalizują o to, kto szybciej dotrze do wyjścia. Jako twórca lobby, masz pełną kontrolę nad dostosowaniem rozgrywki do własnych preferencji. Oto przykładowe ustawienia, które możesz modyfikować:
+
+   - **Poziom trudności:** Wybierz spośród opcji takich jak Łatwy, Średni, Trudny, Ekstremalny, aby dopasować wyzwanie do umiejętności graczy.
+
+   - **Opóźnienie restartu:** Swobodnie ustawiasz czas w sekundach, jaki ma minąć między rundami.
+
+   - **Maksymalna liczba graczy:** Decydujesz, ilu graczy może wziąć udział w rozgrywce.
+
+   - **Maksymalny czas rundy:** Określasz limit czasu dla każdej rundy, zapewniając dynamiczną rozgrywkę.
+
+   - **System punktacji:** Wybierasz, w jaki sposób będą przyznawane punkty, np. za konkretne miejsca (np. 10 punktów za 1. miejsce, 7 za 2., 5 za 3.).
+
+   - **Próg automatycznego startu:** Ustalasz procent graczy, po którego osiągnięciu gra rozpocznie się automatycznie.
+
+   - **Próg zakończenia:** Decydujesz, ilu graczy musi dotrzeć do celu, aby runda się zakończyła.
+
+   - **Auto-Restart:** Możesz włączyć lub wyłączyć automatyczne rozpoczynanie nowej rundy.
+
+   - **Włącz czat:** Masz możliwość włączenia lub wyłączenia funkcji czatu, aby gracze mogli się komunikować.
 
 ## Wymagania systemowe
 
